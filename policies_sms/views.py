@@ -30,6 +30,11 @@ def test_messages(request):
                                  F' {list((messages.keys()))}'
             }
         else:
+            custom_fields = request.GET.get("values", None)
+            if custom_fields:
+                pairs = map(lambda x: x.split(":"), custom_fields.split(","))
+                custom = {k: v for k, v in pairs}
+                message = message % custom
             resp_content = {
                 'success': True,
                 'message': message
