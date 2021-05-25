@@ -1,0 +1,119 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-05-21 13:16+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:18
+msgid "policies_sms.sms_on_activation"
+msgstr ""
+"The policy for the family/group "
+"%(InsuranceID)s - %(Name)s with the insurance product "
+"%(ProductCode)s - %(ProductName)s has been activated from the date "
+"%(EffectiveDate)s until the expiry date %(ExpiryDate)s."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:22
+msgid "policies_sms.sms_on_effective"
+msgstr ""
+"The policy for the family/group %(InsuranceID)s - "
+"%(Name)s with the insurance product %(ProductCode)s - "
+"%(ProductName)s starts insurance coverage today and expires on "
+"%(ExpiryDate)s."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:26
+msgid "policies_sms.sms_before_expiry"
+msgstr ""
+"The policy for the family/group %(InsuranceID)s - "
+"%(Name)s with the insurance product %(ProductCode)s - "
+"%(ProductName)s will expire on %(ExpiryDate)s. "
+"Its renewal is recommended."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:30
+msgid "policies_sms.sms_on_expiration"
+msgstr ""
+"The policy for the family/group %(InsuranceID)s - %(Name)s "
+"with the insurance product %(ProductCode)s - %(ProductName)s "
+" expires today and it has not been renewed yet."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:34
+msgid "policies_sms.sms_after_expiry"
+msgstr ""
+"The policy for the family/group %(InsuranceID)s - "
+"%(Name)s with the insurance product %(ProductCode)s - %(ProductName)s "
+"expired on %(ExpiryDate)s and it hasn’t been renewed yet. "
+"Its renewal is recommended."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:38
+msgid "policies_sms.sms_on_renewal"
+msgstr ""
+"The policy for the family/group %(InsuranceID)s - "
+"%(Name)s with the insurance product %(ProductCode)s - "
+"%(ProductName)s has been renewed from the date "
+"%(EffectiveDate)s until the expiry date %(ExpiryDate)s."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:41
+msgid "policies_sms.sms_control_number_assigned"
+msgstr ""
+"The control number %(ControlNumber)s was assigned for "
+"the request issued on %(DateRequest)s at %(TimeRequest)s "
+"for payment of the set of policies containing the family/group "
+"%(InsuranceID)s - %(Name)s with the insurance product %(ProductCode)s - "
+"%(ProductCode)s and alltogether %(NumberPolicies)s policies. "
+"The amount of payment associated with the request is %(AmountToBePaid)s."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:46
+msgid "policies_sms.sms_control_number_error_bulk_payment"
+msgstr ""
+"The control number %(ControlNumber)s cannot be assigned for "
+"the request issued on %(DateRequest)s at %(TimeRequest)s for "
+"payment of the set of policies containing the family/group "
+"%(InsuranceID)s - %(Name)s with the insurance product %(ProductCode)s "
+"- %(ProductCode)s and alltogether %(NumberPolicies)s policies. "
+"The reason is %(ErrorMessage)s."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:50
+msgid "policies_sms.sms_control_number_error_single_payment"
+msgstr ""
+"The control number %(ControlNumber)s cannot be assigned for the request issued on "
+"%(DateRequest)s at %(TimeRequest)s for payment of the policy for the family/group %(InsuranceID)s "
+"with the insurance product %(ProductCode)s . The reason is %(ErrorMessage)s"
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:54
+msgid "policies_sms.sms_paid_and_activated"
+msgstr ""
+"The payment %(Payment)s performed on %(DatePayment)s for the "
+"control number %(ControlNumber)s received and the "
+"policy for the family/group %(InsuranceID)s - %(Name)s "
+"with the insurance product %(ProductCode)s - %(ProductName)s "
+"activated from the date %(EffectiveDate)s until the expiry date %(ExpiryDate)s. "
+"The allocated payment for the policy is %(Payment)s."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:58
+msgid "policies_sms.sms_paid_and_not_activated"
+msgstr ""
+"The payment %(Payment)s performed on %(DatePayment)s for the control number "
+"%(ControlNumber)s received but the policy for the family/group "
+"%(InsuranceID)s - %(Name)s with the insurance product %(ProductCode)s "
+"- %(ProductName)s has not been activated. "
+"The allocated payment for the policy is %(Payment)s "
+"but still %(PaymentLeft)s should be paid for activation of the policy."
+
+#: policies_sms/SMSTemplates/DefaultSMSTemplates.py:62
+msgid "policies_sms.sms_paid_and_not_matched"
+msgstr ""
+"The payment %(Payment)s performed on %(DatePayment)s for the control number %(ControlNumber)s received "
+"but the policies in the set containing the family/group %(InsuranceID)s - %(Name)s with the insurance "
+"product %(ProductCode)s - %(ProductName)s cannot be matched for time being"

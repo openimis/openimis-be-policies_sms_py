@@ -1,0 +1,1 @@
+from policies_sms.SMSTemplates.DefaultSMSTemplates import DefaultSMSTemplates
