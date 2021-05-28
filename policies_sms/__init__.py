@@ -1,0 +1,1 @@
+default_app_config = 'policies_sms.apps.PoliciesSmsConfig'
