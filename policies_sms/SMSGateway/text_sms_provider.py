@@ -38,7 +38,7 @@ class TextSMSProvider(SMSGatewayAbs):
             sms_file.write(sms_message)
 
     def __get_next_default_filename(self, save_dir):
-        # By default smses are saved as SMSMessage_{id}.txt, where id is unique integer
+        # By default sms is saved in SMSMessage_{id}.txt file, where id is unique integer
         # in scope of DestinationFolder
         _, _, filenames = next(walk(save_dir), (None, None, None))
 

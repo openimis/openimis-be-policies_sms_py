@@ -2,15 +2,12 @@ from abc import ABC
 
 from requests import PreparedRequest
 
-from policies_sms.SMSGateway.RequestBuilders import abstract_sms_request_builder, BaseSMSBuilder
+from policies_sms.SMSGateway.RequestBuilders import BaseSMSBuilder
 from policies_sms.SMSGateway.exceptions import GatewayConfigurationException
 from policies_sms.apps import PoliciesSmsConfig
 
 
 class SMSGatewayAbs(ABC):
-
-    def __init__(self):
-        pass
 
     @property
     def provider_configuration_key(self):
@@ -35,6 +32,7 @@ class SMSGatewayAbs(ABC):
         builder.set_request_headers(self.get_headers())
         builder.set_request_method(self.get_method())
         builder.set_request_content(self.get_request_content())
+        builder.set_request_url(self.get_request_url())
         return builder.get_request()
 
     def get_auth(self):
