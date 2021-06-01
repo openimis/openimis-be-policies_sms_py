@@ -13,7 +13,7 @@ class BaseSMSBuilder(SMSRequestBuilderAbs):
         self._sms_request.prepare_headers(headers)
 
     def set_request_content(self, content, files=None, json=None):
-        self._sms_request.prepare_body(content, files, json=None)
+        self._sms_request.prepare_body(content, files=files, json=json)
 
     def set_request_method(self, request_type: str):
         self._sms_request.prepare_method(request_type)
