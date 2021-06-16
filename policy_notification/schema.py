@@ -5,8 +5,8 @@ from core.schema import signal_mutation_module_after_mutating
 from insuree.models import Family, Insuree
 from graphene_django.filter import DjangoFilterConnectionField
 
-from policies_sms.gql_queries import FamilySmsGQLType
-from policies_sms.services import update_family_sms_policy, create_family_sms_policy, delete_family_sms
+from policy_notification.gql_queries import FamilySmsGQLType
+from policy_notification.services import update_family_sms_policy, create_family_sms_policy, delete_family_sms
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +29,14 @@ def on_family_create_mutation(mutation_args):
         logger.error("Error ocurred during creating new familySMS, traceback: ")
         traceback.print_exc()
 
-    family_sms_policy = mutation_args['data'].get('contribution', {}).get('policiesSMS', {})
+    family_sms_policy = mutation_args['data'].get('contribution', {}).get('PolicyNotification', {})
     create_family_sms_policy(family_uuid, family_sms_policy)
     return []
 
 
 def on_family_update_mutation(mutation_args):
     family_uuid = mutation_args['data'].get('uuid', None)
-    family_sms_policy_update = mutation_args['data'].get('contribution', {}).get('policiesSMS', {})
+    family_sms_policy_update = mutation_args['data'].get('contribution', {}).get('PolicyNotification', {})
 
     if not family_uuid:
         return []

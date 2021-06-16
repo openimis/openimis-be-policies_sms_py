@@ -2,9 +2,9 @@ from abc import ABC
 
 from requests import PreparedRequest
 
-from policies_sms.SMSGateway.RequestBuilders import BaseSMSBuilder
-from policies_sms.SMSGateway.exceptions import GatewayConfigurationException
-from policies_sms.apps import PoliciesSmsConfig
+from policy_notification.SMSGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.SMSGateway.exceptions import GatewayConfigurationException
+from policy_notification.apps import PolicyNotificationConfig
 
 
 class SMSGatewayAbs(ABC):
@@ -52,4 +52,4 @@ class SMSGatewayAbs(ABC):
 
     @property
     def _gateway_provider_configuration(self):
-        return PoliciesSmsConfig.providers[self.provider_configuration_key]
+        return PolicyNotificationConfig.providers[self.provider_configuration_key]

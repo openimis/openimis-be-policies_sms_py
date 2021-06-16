@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import requests
 
-from policies_sms.SMSGateway import EGASMSGateway
-from policies_sms.SMSGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.SMSGateway import EGASMSGateway
+from policy_notification.SMSGateway.RequestBuilders import BaseSMSBuilder
 
 
 class TestEGASMSGateway(TestCase):
@@ -45,7 +45,7 @@ class TestEGASMSGateway(TestCase):
     def assign_test_output(self, output):
         self.request_called = output
 
-    @patch('policies_sms.apps.PoliciesSmsConfig.providers', new_callable=PropertyMock)
+    @patch('policy_notification.apps.PolicyNotificationConfig.providers', new_callable=PropertyMock)
     def test_gateway_send_sms(self, config):
         config.return_value = self.TEST_MODULE_CONFIG['providers']
 

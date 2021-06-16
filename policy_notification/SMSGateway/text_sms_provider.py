@@ -1,8 +1,8 @@
 import logging
 import re
 
-from policies_sms.SMSGateway.abstract_sms_gateway import SMSGatewayAbs
-from policies_sms.apps import PoliciesSmsConfig
+from policy_notification.SMSGateway.abstract_sms_gateway import SMSGatewayAbs
+from policy_notification.apps import PolicyNotificationConfig
 from os import walk, mkdir, path
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class TextSMSProvider(SMSGatewayAbs):
 
     @property
     def _gateway_provider_configuration(self):
-        config = PoliciesSmsConfig.providers.get(self.provider_configuration_key, None)
+        config = PolicyNotificationConfig.providers.get(self.provider_configuration_key, None)
         if config is None:
             logger.warning("Configuration for TextSMSProvider not found, using default one")
             return {'DestinationFolder': 'sent_sms'}

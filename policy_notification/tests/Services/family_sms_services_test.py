@@ -1,11 +1,11 @@
 from unittest.mock import patch, PropertyMock
-from unittest import TestCase
+from django.test import TestCase
 
 import uuid
 from insuree.test_helpers import create_test_insuree
 from insuree.models import Family
-from policies_sms import utils
-from policies_sms.services import *
+from policy_notification import utils
+from policy_notification.services import *
 
 
 class TestFamilySMSServices(TestCase):

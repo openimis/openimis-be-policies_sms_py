@@ -6,10 +6,10 @@ from core.models import Language
 from django.core.exceptions import ValidationError
 from typing import List
 
-from policies_sms.models import FamilySMS
+from policy_notification.models import FamilySMS
 from insuree.models import Family
 
-from policies_sms.utils import validate_family_sms_data, get_default_sms_data
+from policy_notification.utils import validate_family_sms_data, get_default_sms_data
 logger = logging.getLogger(__name__)
 
 

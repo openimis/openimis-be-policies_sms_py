@@ -1,7 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
 from core import ExtendedConnection
-from policies_sms.models import FamilySMS
+from policy_notification.models import FamilySMS
 
 
 class FamilySmsGQLType(DjangoObjectType):
