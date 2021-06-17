@@ -6,7 +6,7 @@ from django.shortcuts import render
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
 
-from policy_notification.SMSTemplates import DefaultSMSTemplates
+from policy_notification.NotificationTemplates import DefaultSMSTemplates
 from policy_notification.apps import PolicyNotificationConfig
 
 from django.utils import translation

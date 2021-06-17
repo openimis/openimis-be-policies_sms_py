@@ -5,7 +5,7 @@ import requests
 from requests import PreparedRequest
 from requests.auth import HTTPBasicAuth
 
-from policy_notification.SMSGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
 
 
 class TestRequestBuilder(TestCase):

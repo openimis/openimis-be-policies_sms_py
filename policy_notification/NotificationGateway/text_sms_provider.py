@@ -1,7 +1,7 @@
 import logging
 import re
 
-from policy_notification.SMSGateway.abstract_sms_gateway import SMSGatewayAbs
+from policy_notification.NotificationGateway.abstract_sms_gateway import SMSGatewayAbs
 from policy_notification.apps import PolicyNotificationConfig
 from os import walk, mkdir, path
 

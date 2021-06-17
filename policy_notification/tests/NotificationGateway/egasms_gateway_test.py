@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import requests
 
-from policy_notification.SMSGateway import EGASMSGateway
-from policy_notification.SMSGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.NotificationGateway import EGASMSGateway
+from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
 
 
 class TestEGASMSGateway(TestCase):

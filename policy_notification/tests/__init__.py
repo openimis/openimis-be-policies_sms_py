@@ -1,2 +1,2 @@
-from .SMSGateway import *
+from .NotificationGateway import *
 from .Services import *

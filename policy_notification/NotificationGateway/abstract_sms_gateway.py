@@ -2,8 +2,8 @@ from abc import ABC
 
 from requests import PreparedRequest
 
-from policy_notification.SMSGateway.RequestBuilders import BaseSMSBuilder
-from policy_notification.SMSGateway.exceptions import GatewayConfigurationException
+from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.NotificationGateway.exceptions import GatewayConfigurationException
 from policy_notification.apps import PolicyNotificationConfig
 
 
