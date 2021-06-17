@@ -9,11 +9,11 @@ from policy_notification.services import *
 
 
 class TestFamilySMSServices(TestCase):
-    SMS_APPROVED_DATA = {'approvalOfSMS': True, 'languageOfSMS': 'en'}
-    SMS_DECLINED_DATA = {'approvalOfSMS': True, 'languageOfSMS': 'fr'}
-    EXPECTED_DEFAULT = {'approvalOfSMS': False, 'languageOfSMS': 'en'}
-    SMS_INVALID_LANGUAGE_DATA = {'approvalOfSMS': True, 'languageOfSMS': 'uv'}
-    SMS_UPDATE_DATA = {'approvalOfSMS': True, 'languageOfSMS': 'fr'}
+    SMS_APPROVED_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'en'}
+    SMS_DECLINED_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'fr'}
+    EXPECTED_DEFAULT = {'approvalOfNotification': False, 'languageOfNotification': 'en'}
+    SMS_INVALID_LANGUAGE_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'uv'}
+    SMS_UPDATE_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'fr'}
 
     def setUp(self):
         self.test_insuree = create_test_insuree(with_family=True)
@@ -30,30 +30,30 @@ class TestFamilySMSServices(TestCase):
         family_sms_entry = create_family_sms_policy(self.test_family.uuid, self.SMS_APPROVED_DATA)
 
         self.assertEqual(family_sms_entry.family, self.test_family)
-        self.assertEqual(family_sms_entry.approval_of_sms, self.SMS_APPROVED_DATA['approvalOfSMS'])
-        self.assertEqual(family_sms_entry.language_of_sms, self.SMS_APPROVED_DATA['languageOfSMS'])
+        self.assertEqual(family_sms_entry.approval_of_notification, self.SMS_APPROVED_DATA['approvalOfNotification'])
+        self.assertEqual(family_sms_entry.language_of_notification, self.SMS_APPROVED_DATA['languageOfNotification'])
 
     def test_create_decline(self):
         family_sms_entry = create_family_sms_policy(self.test_family.uuid, self.SMS_DECLINED_DATA)
 
         self.assertEqual(family_sms_entry.family, self.test_family)
-        self.assertEqual(family_sms_entry.approval_of_sms, self.SMS_DECLINED_DATA['approvalOfSMS'])
-        self.assertEqual(family_sms_entry.language_of_sms, self.SMS_DECLINED_DATA['languageOfSMS'])
+        self.assertEqual(family_sms_entry.approval_of_notification, self.SMS_DECLINED_DATA['approvalOfNotification'])
+        self.assertEqual(family_sms_entry.language_of_notification, self.SMS_DECLINED_DATA['languageOfNotification'])
 
     def test_create_default(self):
         family_sms_entry = create_family_sms_policy(self.test_family.uuid)
 
         self.assertEqual(family_sms_entry.family, self.test_family)
-        self.assertEqual(family_sms_entry.approval_of_sms, self.EXPECTED_DEFAULT['approvalOfSMS'])
-        self.assertEqual(family_sms_entry.language_of_sms, self.EXPECTED_DEFAULT['languageOfSMS'])
+        self.assertEqual(family_sms_entry.approval_of_notification, self.EXPECTED_DEFAULT['approvalOfNotification'])
+        self.assertEqual(family_sms_entry.language_of_notification, self.EXPECTED_DEFAULT['languageOfNotification'])
 
     def test_update_sms_policy(self):
         create_family_sms_policy(self.test_family.uuid)
         updated_sms_entry = update_family_sms_policy(self.test_family.uuid, self.SMS_UPDATE_DATA)
 
         self.assertEqual(updated_sms_entry.family, self.test_family)
-        self.assertEqual(updated_sms_entry.approval_of_sms, self.SMS_UPDATE_DATA['approvalOfSMS'])
-        self.assertEqual(updated_sms_entry.language_of_sms, self.SMS_UPDATE_DATA['languageOfSMS'])
+        self.assertEqual(updated_sms_entry.approval_of_notification, self.SMS_UPDATE_DATA['approvalOfNotification'])
+        self.assertEqual(updated_sms_entry.language_of_notification, self.SMS_UPDATE_DATA['languageOfNotification'])
 
     def test_update_non_existing_family(self):
         self.assertRaises(Family.DoesNotExist, update_family_sms_policy, uuid.uuid4(), self.SMS_UPDATE_DATA)
@@ -69,8 +69,8 @@ class TestFamilySMSServices(TestCase):
         deleted = output[0]
 
         self.assertEqual(len(output), 1)
-        self.assertEqual(deleted.approval_of_sms, expected_values['approvalOfSMS'])
-        self.assertEqual(deleted.language_of_sms, expected_values['languageOfSMS'])
+        self.assertEqual(deleted.approval_of_notification, expected_values['approvalOfNotification'])
+        self.assertEqual(deleted.language_of_notification, expected_values['languageOfNotification'])
         self.assertEqual(deleted.validity_to, None)  # For active family it's not actually deleted
         self.assertEqual(family_sms_entry.family, deleted.family)
 
@@ -84,8 +84,8 @@ class TestFamilySMSServices(TestCase):
         deleted = output[0]
 
         self.assertEqual(len(output), 1)
-        self.assertEqual(deleted.approval_of_sms, expected_values['approvalOfSMS'])
-        self.assertEqual(deleted.language_of_sms, expected_values['languageOfSMS'])
+        self.assertEqual(deleted.approval_of_notification, expected_values['approvalOfNotification'])
+        self.assertEqual(deleted.language_of_notification, expected_values['languageOfNotification'])
         self.assertEqual(family_sms_entry.family, deleted.family)
         self.assertIsNotNone(deleted.validity_to)
 

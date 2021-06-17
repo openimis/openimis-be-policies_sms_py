@@ -5,14 +5,14 @@ from core.schema import signal_mutation_module_after_mutating
 from insuree.models import Family, Insuree
 from graphene_django.filter import DjangoFilterConnectionField
 
-from policy_notification.gql_queries import FamilySmsGQLType
+from policy_notification.gql_queries import FamilyNotificationGQLType
 from policy_notification.services import update_family_sms_policy, create_family_sms_policy, delete_family_sms
 
 logger = logging.getLogger(__name__)
 
 
 class Query(graphene.ObjectType):
-    family_sms = DjangoFilterConnectionField(FamilySmsGQLType)
+    family_notification = DjangoFilterConnectionField(FamilyNotificationGQLType)
 
 
 def on_family_create_mutation(mutation_args):
