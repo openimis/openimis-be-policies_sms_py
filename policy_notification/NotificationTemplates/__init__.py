@@ -1,0 +1,1 @@
+from policy_notification.NotificationTemplates.DefaultSMSTemplates import DefaultSMSTemplates

@@ -1,7 +1,7 @@
 import requests
 
-from policy_notification.SMSGateway.RequestBuilders import BaseSMSBuilder
-from policy_notification.SMSGateway.abstract_sms_gateway import SMSGatewayAbs
+from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.NotificationGateway.abstract_sms_gateway import SMSGatewayAbs
 
 
 class EGASMSGateway(SMSGatewayAbs):
