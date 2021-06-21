@@ -1,6 +1,6 @@
 from requests.auth import AuthBase
 
-from policy_notification.NotificationGateway.RequestBuilders.abstract_sms_request_builder import SMSRequestBuilderAbs
+from policy_notification.notification_gateways.RequestBuilders.abstract_sms_request_builder import SMSRequestBuilderAbs
 from requests import Request, PreparedRequest
 
 

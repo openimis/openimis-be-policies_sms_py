@@ -2,12 +2,12 @@ from abc import ABC
 
 from requests import PreparedRequest
 
-from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
-from policy_notification.NotificationGateway.exceptions import GatewayConfigurationException
+from policy_notification.notification_gateways.RequestBuilders import BaseSMSBuilder
+from policy_notification.notification_gateways.exceptions import GatewayConfigurationException
 from policy_notification.apps import PolicyNotificationConfig
 
 
-class SMSGatewayAbs(ABC):
+class NotificationGatewayAbs(ABC):
 
     @property
     def provider_configuration_key(self):
@@ -23,7 +23,7 @@ class SMSGatewayAbs(ABC):
         except KeyError as e:
             raise GatewayConfigurationException(type(self), param, self.provider_configuration_key) from e
 
-    def send_sms(self, sms_message):
+    def send_notification(self, notification_content, family_number=None):
         raise NotImplementedError("send_sms not implemented")
 
     def build_request(self, builder: BaseSMSBuilder) -> PreparedRequest:
