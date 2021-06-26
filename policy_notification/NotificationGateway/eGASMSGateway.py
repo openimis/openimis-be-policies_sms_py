@@ -1,14 +1,10 @@
 import requests
 
-from policies_sms.SMSGateway.RequestBuilders import BaseSMSBuilder
-from policies_sms.SMSGateway.abstract_sms_gateway import SMSGatewayAbs
+from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.NotificationGateway.abstract_sms_gateway import SMSGatewayAbs
 
 
 class EGASMSGateway(SMSGatewayAbs):
-    """
-    Generic sms provider made for test purposes, it doesn't send text messages but save them in local directory
-    instead.
-    """
 
     def __init__(self, builder=BaseSMSBuilder()):
         self.builder = builder

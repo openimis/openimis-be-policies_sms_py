@@ -1,1 +1,1 @@
-# openimis-be-policies_sms_py
+# openimis-be-policy_notification_py

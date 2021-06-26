@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-MODULE_NAME = "policies_sms"
+MODULE_NAME = "policy_notification"
 
 DEFAULT_CONFIG = {
     "providers": {
@@ -10,7 +10,7 @@ DEFAULT_CONFIG = {
         },
         "eGASMSGateway": {
             "GateUrl": "http://127.0.0.1:8000",
-            "SmsResource": "/api/policies_sms/test_sms/",
+            "SmsResource": "/api/policy_notification/test_sms/",
             "PrivateKey": "",
             "UserId": "",
             "SenderId": "",
@@ -23,13 +23,13 @@ DEFAULT_CONFIG = {
 }
 
 
-class PoliciesSmsConfig(AppConfig):
+class PolicyNotificationConfig(AppConfig):
     name = MODULE_NAME
 
     providers = {}
 
     def _configure_perms(self, cfg):
-        PoliciesSmsConfig.providers = cfg["providers"]
+        PolicyNotificationConfig.providers = cfg["providers"]
 
     def ready(self):
         from core.models import ModuleConfiguration

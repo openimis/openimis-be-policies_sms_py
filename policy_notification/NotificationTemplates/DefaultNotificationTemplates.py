@@ -15,48 +15,48 @@ class DefaultSMSTemplates:
 
     @property
     def sms_on_activation(self):
-        return _("policies_sms.sms_on_activation")
+        return _("policy_notification.sms_on_activation")
 
     @property
     def sms_on_effective(self):
-        return _("policies_sms.sms_on_effective")
+        return _("policy_notification.sms_on_effective")
 
     @property
     def sms_before_expiry(self):
-        return _("policies_sms.sms_before_expiry")
+        return _("policy_notification.sms_before_expiry")
 
     @property
     def sms_on_expiration(self):
-        return _("policies_sms.sms_on_expiration")
+        return _("policy_notification.sms_on_expiration")
 
     @property
     def sms_after_expiry(self):
-        return _("policies_sms.sms_after_expiry")
+        return _("policy_notification.sms_after_expiry")
 
     @property
     def sms_on_renewal(self):
-        return _("policies_sms.sms_on_renewal")
+        return _("policy_notification.sms_on_renewal")
 
     @property
     def sms_control_number_assigned(self):
-        return _("policies_sms.sms_control_number_assigned")
+        return _("policy_notification.sms_control_number_assigned")
 
     @property
     def sms_control_number_error_bulk_payment(self):
-        return _("policies_sms.sms_control_number_error_bulk_payment")
+        return _("policy_notification.sms_control_number_error_bulk_payment")
 
     @property
     def sms_control_number_error_single_payment(self):
-        return _("policies_sms.sms_control_number_error_single_payment")
+        return _("policy_notification.sms_control_number_error_single_payment")
 
     @property
     def sms_paid_and_activated(self):
-        return _("policies_sms.sms_paid_and_activated")
+        return _("policy_notification.sms_paid_and_activated")
 
     @property
     def sms_paid_and_not_activated(self):
-        return _("policies_sms.sms_paid_and_not_activated")
+        return _("policy_notification.sms_paid_and_not_activated")
 
     @property
     def sms_paid_and_not_matched(self):
-        return _("policies_sms.sms_paid_and_not_matched")
+        return _("policy_notification.sms_paid_and_not_matched")

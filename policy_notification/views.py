@@ -4,8 +4,11 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 # Create your views here.
-from policies_sms.SMSTemplates import DefaultSMSTemplates
-from django.utils.translation import ugettext, gettext as _
+from django.views.decorators.csrf import csrf_exempt
+
+from policy_notification.NotificationTemplates import DefaultSMSTemplates
+from policy_notification.apps import PolicyNotificationConfig
+
 from django.utils import translation
 
 
@@ -46,4 +49,28 @@ def test_messages(request):
         }
 
     response = HttpResponse(content=json.dumps(resp_content), status=200)
+    return response
+
+
+def test_config(request):
+    config = request.GET.get("config", None)
+    content = getattr(PolicyNotificationConfig, config) if config else PolicyNotificationConfig.providers
+
+    resp_content = {
+        'success': True,
+        'config': content
+    }
+
+    response = HttpResponse(content=json.dumps(resp_content), status=200)
+    return response
+
+
+@csrf_exempt
+def test_sms(request):
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode) if body_unicode else {'content': {}}
+    content = body['content']
+    content['headers'] = dict(request.headers)
+
+    response = HttpResponse(content=json.dumps(content), status=200)
     return response

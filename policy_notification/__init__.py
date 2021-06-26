@@ -1,0 +1,1 @@
+default_app_config = 'policy_notification.apps.PolicyNotificationConfig'
