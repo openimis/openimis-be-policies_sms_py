@@ -1,23 +1,25 @@
 import requests
 
-from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
-from policy_notification.NotificationGateway.abstract_sms_gateway import SMSGatewayAbs
+from policy_notification.notification_gateways.RequestBuilders import BaseSMSBuilder
+from policy_notification.notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
 
 
-class EGASMSGateway(SMSGatewayAbs):
+class EGASMSGateway(NotificationGatewayAbs):
 
     def __init__(self, builder=BaseSMSBuilder()):
         self.builder = builder
 
         # Last sent message
         self.message_sent = None
+        self.sms_number = None
 
     @property
     def provider_configuration_key(self):
         return "eGASMSGateway"
 
-    def send_sms(self, sms_message, builder=None):
-        self.message_sent = sms_message
+    def send_notification(self, notification_content, family_number=None, builder=None):
+        self.message_sent = notification_content
+        self.sms_number = family_number
 
         builder = builder or self.builder
         request = self.build_request(builder)
@@ -43,6 +45,7 @@ class EGASMSGateway(SMSGatewayAbs):
         return 'POST'
 
     def get_request_content(self):
+        # TODO: Add proper xml transformation here
         return self.message_sent
 
     def get_request_url(self):

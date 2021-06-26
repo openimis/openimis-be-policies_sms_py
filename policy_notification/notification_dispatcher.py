@@ -1,0 +1,130 @@
+import logging
+from datetime import datetime
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
+
+from .models import IndicationOfPolicyNotifications
+from .notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
+from .notification_templates import DefaultSMSTemplates
+from policy_notification.notification_triggers import NotificationTriggerEventDetectors
+from .notification_triggers import NotificationTriggerAbs
+from policy.models import Policy, PolicyRenewal
+from django.utils import translation
+
+logger = logging.getLogger(__name__)
+
+
+class NotificationDispatcher:
+    NOTIFICATION_NOT_IN_INDICATION_TABLE = "Notification of type {notification} doesn't have representation " \
+                                           "in IndicationOfPolicyNotifications table."
+
+    def __init__(self, notification_provider: NotificationGatewayAbs,
+                 notification_templates_source: DefaultSMSTemplates = DefaultSMSTemplates,
+                 trigger_detector: NotificationTriggerAbs = NotificationTriggerEventDetectors):
+        self.provider = notification_provider
+        self.templates = notification_templates_source
+        self.trigger_detector = trigger_detector
+
+    def send_notification_new_active_policies(self):
+        policies = self.trigger_detector.find_newly_activated_policies()
+        self._send_notification_for_eligible_policies(
+            policies, self.templates.sms_on_activation, 'activation_of_policy')
+
+    def send_notification_starting_of_policy(self):
+        policies = self.trigger_detector.find_newly_effective_policies()
+        self._send_notification_for_eligible_policies(
+            policies, self.templates.sms_on_effective, 'starting_of_policy')
+
+    def send_notification_new_renewed_policies(self):
+        policies = self.trigger_detector.find_newly_renewed_policies()
+        self._send_notification_for_eligible_policies(
+            policies, self.templates.sms_on_renewal, 'renewal_of_policy')
+
+    def send_notification_not_renewed_soon_expiring_policies(self):
+        policies = self.trigger_detector.find_soon_expiring_policies()
+        self._send_notification_for_eligible_policies(
+            policies, self.templates.sms_before_expiry, 'expiration_of_policy')
+
+    def send_notification_not_renewed_expired_policies(self):
+        policies = self.trigger_detector.find_recently_expired_policies()
+        self._send_notification_for_eligible_policies(
+            policies, self.templates.sms_after_expiry, 'reminder_after_expiration')
+
+    def send_notification_expiring_today_policies(self):
+        policies = self.trigger_detector.find_newly_activated_policies()
+        self._send_notification_for_eligible_policies(
+            policies, self.templates.sms_on_expiration, 'expiration_of_policy')
+
+    def _policy_customs(self, policy: Policy):
+        """
+        Build dictionary of parameters which will be used as custom parameters in notification templates.
+        :param policy: Policy for which notification will be sent
+        :return: Dictionary which keys used in templates
+        """
+        head = policy.family.head_insuree
+        customs = {
+            'InsuranceID': head.chf_id,
+            'Name': F"{head.other_names} {head.last_name}",
+            'EffectiveDate': policy.effective_date,
+            'ExpiryDate': policy.expiry_date,
+            'ProductCode': policy.product.code,
+            'ProductName': policy.product.name
+        }
+        return customs
+
+    def _send_notification_for_eligible_policies(self, policies, notification_template, type_of_notification):
+        notification_eligible_policies = self._get_eligible_policies(policies, type_of_notification)
+        notification_sent_successfully = []
+        for policy in notification_eligible_policies:
+            result = self._send_notification(policy, notification_template)
+            if result:
+                notification_sent_successfully.append(policy)
+            try:
+                indication = policy.indication_of_notifications
+            except ObjectDoesNotExist:
+                indication = IndicationOfPolicyNotifications(policy=policy)
+
+            if not hasattr(indication, type_of_notification):
+                logger.warning(self.NOTIFICATION_NOT_IN_INDICATION_TABLE.format(type_of_notification))
+            else:
+                if result:
+                    setattr(indication, type_of_notification, datetime.now())
+                    indication.save()
+        return notification_sent_successfully
+
+    def _send_notification(self, policy, notification_template):
+        phone = policy.family.head_insuree.phone
+        if not phone:
+            logger.error(F"Failed to send notification for family with head {policy.family.head_insuree}, "
+                         F"insuree doesn't have assigned phone number")
+            return False
+
+        current_language = translation.get_language()
+        try:
+            translation.activate(policy.family.family_sms.language_of_notification)
+            custom = self._policy_customs(policy)
+            message = notification_template % custom
+            notification_sent = self.provider.send_notification(message, family_number=phone)
+        except Exception as e:
+            logger.error(f"Failed to send notification for policy {policy}, error: {e}")
+            return False
+        finally:
+            translation.activate(current_language)
+        return True
+
+    def _get_eligible_policies(self, policies_ids, type_of_notification):
+        base_eligibility = Policy.objects \
+            .filter(id__in=policies_ids) \
+            .filter(family__family_sms__approval_of_notification=True)
+
+        if hasattr(IndicationOfPolicyNotifications, type_of_notification):
+            # Confirm that for given policy notification was not sent
+            indication_filter = {
+                f"indication_of_notifications__{type_of_notification}__isnull": True,
+            }
+            indication_filter = Q(indication_of_notifications__isnull=True) | Q(**indication_filter)
+            base_eligibility = base_eligibility.filter(indication_filter)
+        else:
+            logger.warning(self.NOTIFICATION_NOT_IN_INDICATION_TABLE.format(type_of_notification))
+        return base_eligibility

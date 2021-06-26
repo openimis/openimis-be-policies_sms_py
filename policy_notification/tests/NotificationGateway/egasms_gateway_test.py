@@ -3,8 +3,8 @@ from unittest import TestCase
 
 import requests
 
-from policy_notification.NotificationGateway import EGASMSGateway
-from policy_notification.NotificationGateway.RequestBuilders import BaseSMSBuilder
+from policy_notification.notification_gateways import EGASMSGateway
+from policy_notification.notification_gateways.RequestBuilders import BaseSMSBuilder
 
 
 class TestEGASMSGateway(TestCase):
@@ -51,7 +51,7 @@ class TestEGASMSGateway(TestCase):
 
         gateway = EGASMSGateway(self.BUILDER)
         with patch.object(requests.Session, 'send', side_effect=self.assign_test_output) as mock_method:
-            output = gateway.send_sms(self.MESSAGE_CONTENT)
+            output = gateway.send_notification(self.MESSAGE_CONTENT)
             self._assert_request(self.request_called)
             mock_method.assert_called_once_with(self.request_called)
 
