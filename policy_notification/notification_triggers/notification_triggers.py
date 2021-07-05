@@ -20,8 +20,8 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
     @classmethod
     def find_newly_activated_policies(cls):
         now = datetime.now()
-        if cls.first_call_in_day():
-            # Include also events occurring after last call of the day
+        if cls.first_call_in_day() and cls.TIME_INTERVAL_HOURS < 24:
+            # Include also events occurring after last call of the day if multiple daily task executions
             delta = (24-cls.LAST_CALL_HOUR)+cls.TIME_INTERVAL_HOURS
         else:
             delta = cls.TIME_INTERVAL_HOURS
@@ -33,8 +33,8 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
     @classmethod
     def find_newly_renewed_policies(cls):
         now = datetime.now()
-        if cls.first_call_in_day():
-            # Include also events occurring after last call of the day
+        if cls.first_call_in_day() and cls.TIME_INTERVAL_HOURS < 24:
+            # Include also events occurring after last call of the day if multiple daily task executions
             delta = (24-cls.LAST_CALL_HOUR)+cls.TIME_INTERVAL_HOURS
         else:
             delta = cls.TIME_INTERVAL_HOURS

@@ -107,8 +107,10 @@ Payload:
 *  `trigger_first_call_hour` - Hour of first task execution in given day, default 8
 *  `trigger_last_call_hour` - Hour of last task execution in given day, default 20
 
-**Note:** `trigger_*` settings are unrelated to the actual scheduled task called in the 
-main openimis_be module, this config setting regards only time periods for event detection.
+**Note:** `trigger_*` settings are only used if scheduled task `policy_notification.tasks.send_notification_messages` 
+in the openimis settings.py `SCHEDULED_TASK` is not active. Task included in `SCHEDULED_TASK` should use hour param for 
+execution. Either provided as list of hours at which given task is executed (e.g. hour="8, 12, 16"), 
+single hour (e.g. hour=8), or the time interval when the task is executed every hour (e.g. hour='8-16'). 
 
 
 *  `reminder_before_expiry_days` - Days before the expiry of un-renewed policy to send notifications, 

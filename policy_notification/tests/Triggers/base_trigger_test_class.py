@@ -13,6 +13,8 @@ from policy_notification.notification_triggers.notification_triggers import Noti
 class BaseTriggerTestCase(TestCase):
     TEST_TRIGGER_DETECTOR = NotificationTriggerEventDetectors
     TEST_TRIGGER_DETECTOR.TIME_INTERVAL_HOURS = 24  # interval between task executions is set to 24h
+    TEST_TRIGGER_DETECTOR.REMINDER_BEFORE_EXPIRY_DAYS = 5
+    TEST_TRIGGER_DETECTOR.REMINDER_AFTER_EXPIRY_DAYS = 5
 
     def setUp(self):
         self.create_policy()
