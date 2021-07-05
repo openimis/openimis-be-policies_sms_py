@@ -1,34 +1,34 @@
 from core.models import Language
 from core.utils import get_first_or_default_language
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.db.models import Q
 
-from policy_notification.notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
 from policy_notification.apps import PolicyNotificationConfig
 
 
-def get_default_sms_data():
+def get_default_notification_data():
     return {
         'approvalOfNotification': False,
         'languageOfNotification': get_first_or_default_language().code
     }
 
 
-def validate_family_sms_data(data):
-    sms_approval = data.get('approvalOfNotification', None)
+def validate_family_notification_data(data):
+    approval = data.get('approvalOfNotification', None)
     language_of_notification = data.get('languageOfNotification', None)
 
-    if not isinstance(sms_approval, bool):
-        raise ValidationError(F"approvalOfNotification has to be boolean, not {type(sms_approval)}")
+    if not isinstance(approval, bool):
+        raise ValidationError(F"approvalOfNotification has to be boolean, not {type(approval)}")
 
     if not Language.objects.filter(code=language_of_notification).exists():
         raise ValidationError(F"Language code {language_of_notification} not listed in available language codes")
 
-    data['approvalOfNotification'] = sms_approval
+    data['approvalOfNotification'] = approval
     data['languageOfNotification'] = language_of_notification
     return data
 
 
-def get_sms_providers():
+def get_notification_providers():
     """
     In order for an notification provider to be used for sending notifications, it must meet two conditions:
     - it must be included in the configuration in the providers field,
@@ -42,6 +42,14 @@ def get_sms_providers():
     available_providers = dict(
         [(name, cls) for name, cls in notification_module.__dict__.items() if isinstance(cls, type)]
     )
-    config_sms_providers = [v.lower() for v in PolicyNotificationConfig.providers.keys()]
+    providers_from_config = [v.lower() for v in PolicyNotificationConfig.providers.keys()]
 
-    return [cls for name, cls in available_providers.items() if name.lower() in config_sms_providers]
+    return [cls for name, cls in available_providers.items() if name.lower() in providers_from_config]
+
+
+def get_family_member_with_phone(family):
+    query = family.members.filter((Q(phone__isnull=False) & ~Q(phone='')))
+    if query.exists():
+        return query.first()
+    else:
+        return None

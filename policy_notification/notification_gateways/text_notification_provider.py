@@ -1,7 +1,8 @@
 import logging
 import re
 
-from policy_notification.notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
+from policy_notification.notification_gateways.abstract_sms_gateway import NotificationGatewayAbs, \
+    NotificationSendingResult
 from policy_notification.apps import PolicyNotificationConfig
 from os import walk, mkdir, path
 
@@ -27,7 +28,7 @@ class TextNotificationProvider(NotificationGatewayAbs):
         else:
             return config
 
-    def send_notification(self, notification_content, family_number=None, filename=None):
+    def send_notification(self, notification_content, family_number=None, filename=None) -> NotificationSendingResult:
         save_dir = self.get_provider_config_param('DestinationFolder')
         if not filename:
             filename = self.__get_next_default_filename(save_dir)
@@ -35,7 +36,7 @@ class TextNotificationProvider(NotificationGatewayAbs):
         sms_path = path.join(save_dir, filename)
         with open(sms_path, "w+") as sms_file:
             sms_file.write(notification_content)
-        return sms_path
+        return NotificationSendingResult(sms_path)
 
     def __get_next_default_filename(self, save_dir):
         # By default sms is saved in SMSMessage_{id}.txt file, where id is unique integer

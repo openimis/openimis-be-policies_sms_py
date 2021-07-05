@@ -9,11 +9,11 @@ from typing import List
 from policy_notification.models import FamilySMS
 from insuree.models import Family
 
-from policy_notification.utils import validate_family_sms_data, get_default_sms_data
+from policy_notification.utils import validate_family_notification_data, get_default_notification_data
 logger = logging.getLogger(__name__)
 
 
-def create_family_sms_policy(family_uuid: str, family_notification_data=None) -> FamilySMS:
+def create_family_notification_policy(family_uuid: str, family_notification_data=None) -> FamilySMS:
     """
     Create new familySMS for given family.
     :param family_uuid: UUID of family for which FamilySMS will be created
@@ -26,9 +26,9 @@ def create_family_sms_policy(family_uuid: str, family_notification_data=None) ->
     :raises ValidationError: if given language code is not specified in tblLanguages or approvalOfNotification is not boolean.
     """
     if family_notification_data is None:
-        family_notification_data = get_default_sms_data()
+        family_notification_data = get_default_notification_data()
 
-    validate_family_sms_data(family_notification_data)
+    validate_family_notification_data(family_notification_data)
     family = Family.objects.get(uuid=family_uuid)
 
     if FamilySMS.objects.filter(family=family, validity_to__isnull=True).exists():
@@ -42,7 +42,7 @@ def create_family_sms_policy(family_uuid: str, family_notification_data=None) ->
     return family_notification
 
 
-def update_family_sms_policy(family_uuid: str, updated_family_sms_fields: dict = None) -> FamilySMS:
+def update_family_notification_policy(family_uuid: str, updated_family_sms_fields: dict = None) -> FamilySMS:
     """
     Update familySMS for given family.
     :param family_uuid: UUID of family for which FamilySMS will be created
@@ -62,7 +62,7 @@ def update_family_sms_policy(family_uuid: str, updated_family_sms_fields: dict =
         logger.warning(F"Update FamilySMS for family {family} has failed, family doesn't have sms policy assigned, "
                        "default one is being created.")
         # create default family SMS policy
-        current_family_sms = create_family_sms_policy(family_uuid)
+        current_family_sms = create_family_notification_policy(family_uuid)
 
     updated_approval = updated_family_sms_fields.get('approvalOfNotification', None)
     updated_language = updated_family_sms_fields.get('languageOfNotification', None)
@@ -79,7 +79,7 @@ def update_family_sms_policy(family_uuid: str, updated_family_sms_fields: dict =
     return current_family_sms
 
 
-def delete_family_sms(family_uuids: List[str]) -> List[FamilySMS]:
+def delete_family_notification_policy(family_uuids: List[str]) -> List[FamilySMS]:
     """
     Delete FamilySMS for given families. FamilySMS is in 1:1 relation with Family, therefore if it's deleted from
     active family, status is reset to default one and not removed completely. If family is deactivated
@@ -94,7 +94,7 @@ def delete_family_sms(family_uuids: List[str]) -> List[FamilySMS]:
     deleted = []
     for sms in families_sms:
         if sms.family.validity_to is None:
-            default = get_default_sms_data()
+            default = get_default_notification_data()
             sms.approval_of_notification = default['approvalOfNotification']
             sms.language = default['languageOfNotification']
         else:

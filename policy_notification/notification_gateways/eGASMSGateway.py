@@ -1,7 +1,8 @@
 import requests
 
 from policy_notification.notification_gateways.RequestBuilders import BaseSMSBuilder
-from policy_notification.notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
+from policy_notification.notification_gateways.abstract_sms_gateway import NotificationGatewayAbs, \
+    NotificationSendingResult
 
 
 class EGASMSGateway(NotificationGatewayAbs):
@@ -17,7 +18,7 @@ class EGASMSGateway(NotificationGatewayAbs):
     def provider_configuration_key(self):
         return "eGASMSGateway"
 
-    def send_notification(self, notification_content, family_number=None, builder=None):
+    def send_notification(self, notification_content, family_number=None, builder=None) -> NotificationSendingResult:
         self.message_sent = notification_content
         self.sms_number = family_number
 
@@ -25,7 +26,7 @@ class EGASMSGateway(NotificationGatewayAbs):
         request = self.build_request(builder)
         s = requests.Session()
         response = s.send(request)
-        return response
+        return NotificationSendingResult(response)
 
     def get_auth(self):
         # Gateway uses XAuthHeaders assigned in headers

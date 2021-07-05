@@ -1,7 +1,7 @@
 from django.utils.translation import ugettext as _
 
 
-class DefaultSMSTemplates:
+class DefaultNotificationTemplates:
 
     def get_all(self):
         output = {}
@@ -14,49 +14,49 @@ class DefaultSMSTemplates:
         return output
 
     @property
-    def sms_on_activation(self):
+    def notification_on_activation(self):
         return _("policy_notification.sms_on_activation")
 
     @property
-    def sms_on_effective(self):
+    def notification_on_effective(self):
         return _("policy_notification.sms_on_effective")
 
     @property
-    def sms_before_expiry(self):
+    def notification_before_expiry(self):
         return _("policy_notification.sms_before_expiry")
 
     @property
-    def sms_on_expiration(self):
+    def notification_on_expiration(self):
         return _("policy_notification.sms_on_expiration")
 
     @property
-    def sms_after_expiry(self):
+    def notification_after_expiry(self):
         return _("policy_notification.sms_after_expiry")
 
     @property
-    def sms_on_renewal(self):
+    def notification_on_renewal(self):
         return _("policy_notification.sms_on_renewal")
 
     @property
-    def sms_control_number_assigned(self):
+    def notification_control_number_assigned(self):
         return _("policy_notification.sms_control_number_assigned")
 
     @property
-    def sms_control_number_error_bulk_payment(self):
+    def notification_control_number_error_bulk_payment(self):
         return _("policy_notification.sms_control_number_error_bulk_payment")
 
     @property
-    def sms_control_number_error_single_payment(self):
+    def notification_control_number_error_single_payment(self):
         return _("policy_notification.sms_control_number_error_single_payment")
 
     @property
-    def sms_paid_and_activated(self):
+    def notification_paid_and_activated(self):
         return _("policy_notification.sms_paid_and_activated")
 
     @property
-    def sms_paid_and_not_activated(self):
+    def notification_paid_and_not_activated(self):
         return _("policy_notification.sms_paid_and_not_activated")
 
     @property
-    def sms_paid_and_not_matched(self):
+    def notification_paid_and_not_matched(self):
         return _("policy_notification.sms_paid_and_not_matched")
