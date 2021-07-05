@@ -126,7 +126,8 @@ class FamilyNotificationReportServiceGQL(object):
     @lru_cache(maxsize=1)
     def __patterns_for_filters_omitted_in_additional(self):
         return [
-            self.LOCATION_FILTER_PATTERN,
+            "^parentLocation:\ \"(.*)\"\, parentLocationLevel:\ 0$",
+            "^parentLocation:\ \"(.*)\"\, parentLocationLevel:\ 1$",
             self.OFFICER_PATTERN,
             "(.*)policyNotification(.*)mode(.*)"
         ]
@@ -137,6 +138,14 @@ class FamilyNotificationReportServiceGQL(object):
             'headInsuree': 'Head',
             'members': 'Member'
         }
+
+        __LOCATION_LEVEL_REPR = {
+            '2': 'Municipality',
+            '3': 'Village',
+            '1': 'District',
+            '0': 'Region',
+        }
+
         return {
             # regex_pattern: value_repr_function(regex_groups)
             "(.*)_ChfId_Istartswith: \"(.*)\"":
@@ -156,6 +165,8 @@ class FamilyNotificationReportServiceGQL(object):
             "(.*)_Email_Icontains: \"(.*)\"":
                 lambda x: F'{__MEMBER_REPR.get(x[0], x[0])} Email contains: {x[1]}',
             "nullAsFalsePoverty: (.*)": lambda x: F"Poverty Status: {x[0]}",
+            self.LOCATION_FILTER_PATTERN:
+                lambda x: F'{__LOCATION_LEVEL_REPR.get(x[1], x[1])}: {Location.objects.get(uuid=x[0])}'
         }
 
     @classmethod
