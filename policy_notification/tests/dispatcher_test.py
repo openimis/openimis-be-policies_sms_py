@@ -8,15 +8,15 @@ from product.test_helpers import create_test_product
 
 from policy_notification.models import IndicationOfPolicyNotifications
 from policy_notification.notification_dispatcher import NotificationDispatcher
-from policy_notification.notification_gateways import TextNotificationProvider
-from policy_notification.notification_templates import DefaultSMSTemplates
+from policy_notification.notification_gateways import TextNotificationProvider, NotificationSendingResult
+from policy_notification.notification_templates import DefaultNotificationTemplates
 from policy_notification.services import *
 from policy_notification.notification_triggers.notification_triggers import NotificationTriggerEventDetectors
 
 
 class DispatcherTest(TestCase):
     TEST_PROVIDER = TextNotificationProvider
-    TEST_TEMPLATES = DefaultSMSTemplates
+    TEST_TEMPLATES = DefaultNotificationTemplates
     TEST_TRIGGER_DETECTOR = NotificationTriggerEventDetectors
 
     def setUp(self):
@@ -42,8 +42,8 @@ class DispatcherTest(TestCase):
             "insurance_period": 12,
         })
         self.test_family = self.test_insuree.family
-        self.test_family.family_sms = FamilySMS(approval_of_notification=True, language_of_notification='en')
-        self.test_family.family_sms.save()
+        self.test_family.family_notification = FamilyNotification(approval_of_notification=True, language_of_notification='en')
+        self.test_family.family_notification.save()
         self.test_family.save()
         self.policy = create_test_policy(
             product=self.test_product,
@@ -65,13 +65,14 @@ class DispatcherTest(TestCase):
     @patch('policy_notification.notification_triggers.NotificationTriggerEventDetectors.find_newly_activated_policies')
     def test_send_notification_for_eligible_policies(self, find_policies):
         find_policies.return_value = [self.policy.id]
-        with patch.object(TextNotificationProvider, 'send_notification', return_value=None) as mock_sent:
+        with patch.object(TextNotificationProvider, 'send_notification',
+                          return_value=NotificationSendingResult(success=True)) as mock_sent:
             provider = TextNotificationProvider()
 
             dispatcher = NotificationDispatcher(provider, self.TEST_TEMPLATES(), self.TEST_TRIGGER_DETECTOR())
             dispatcher.send_notification_new_active_policies()
 
-            expected_msg = self.TEST_TEMPLATES().sms_on_activation % self.test_custom_props
+            expected_msg = self.TEST_TEMPLATES().notification_on_activation % self.test_custom_props
             mock_sent.assert_called_once_with(expected_msg, family_number='123123123')
             self.assertIsNotNone(self.policy.indication_of_notifications.activation_of_policy)
 

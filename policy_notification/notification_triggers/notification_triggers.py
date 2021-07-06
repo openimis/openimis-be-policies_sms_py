@@ -4,27 +4,42 @@ from django.db.models import Q, Count, Max, F
 from policy.models import Policy, PolicyRenewal
 from itertools import groupby, chain
 from collections import ChainMap
+from policy_notification.apps import PolicyNotificationConfig
 
 from policy_notification.notification_triggers.abstract_trigger import NotificationTriggerAbs
 
 
 class NotificationTriggerEventDetectors(NotificationTriggerAbs):
     # Taken from config, it has to correspond to the time interval at which subsequent scheduled tasks are triggered.
-    TIME_INTERVAL_HOURS = 8  # This value will be taken from the imis defaults
-    REMINDER_BEFORE_EXPIRY_DAYS = 5  # This value will be taken form config
-    REMINDER_AFTER_EXPIRY_DAYS = 5  # This value will be taken form config
+    TIME_INTERVAL_HOURS = PolicyNotificationConfig.trigger_time_interval_hours
+    FIRST_CALL_HOUR = PolicyNotificationConfig.trigger_first_call_hour
+    LAST_CALL_HOUR = PolicyNotificationConfig.trigger_last_call_hour
+    REMINDER_BEFORE_EXPIRY_DAYS = PolicyNotificationConfig.reminder_before_expiry_days
+    REMINDER_AFTER_EXPIRY_DAYS = PolicyNotificationConfig.reminder_after_expiry_days
 
     @classmethod
     def find_newly_activated_policies(cls):
         now = datetime.now()
-        policies_from = now - timedelta(hours=cls.TIME_INTERVAL_HOURS)
+        if cls.first_call_in_day() and cls.TIME_INTERVAL_HOURS < 24:
+            # Include also events occurring after last call of the day if multiple daily task executions
+            delta = (24-cls.LAST_CALL_HOUR)+cls.TIME_INTERVAL_HOURS
+        else:
+            delta = cls.TIME_INTERVAL_HOURS
+
+        policies_from = now - timedelta(hours=delta)
         active_in_period = NotificationTriggerEventDetectors.policies_activated_from(policies_from)
         return active_in_period
 
     @classmethod
     def find_newly_renewed_policies(cls):
         now = datetime.now()
-        policies_from = now - timedelta(hours=cls.TIME_INTERVAL_HOURS)
+        if cls.first_call_in_day() and cls.TIME_INTERVAL_HOURS < 24:
+            # Include also events occurring after last call of the day if multiple daily task executions
+            delta = (24-cls.LAST_CALL_HOUR)+cls.TIME_INTERVAL_HOURS
+        else:
+            delta = cls.TIME_INTERVAL_HOURS
+
+        policies_from = now - timedelta(hours=delta)
         active_in_period = NotificationTriggerEventDetectors.policies_renewed_from(policies_from)
         return active_in_period
 
@@ -205,4 +220,14 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
             return True
         else:
             return False
+
+    @classmethod
+    def first_call_in_day(cls):
+        # if cls.TIME_INTERVAL_HOURS >= 24:
+        #     return True
+        now = datetime.now()
+        # 1 minute added for compensating time spent previously on code execution
+        offset = (now - timedelta(hours=cls.FIRST_CALL_HOUR, minutes=1)).date()
+        return offset < now.date()
+
 

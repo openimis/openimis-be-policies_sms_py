@@ -16,11 +16,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='FamilySMS',
+            name='FamilyNotification',
             fields=[
                 ('validity_from', core.fields.DateTimeField(db_column='ValidityFrom', default=datetime.datetime.now)),
                 ('validity_to', core.fields.DateTimeField(blank=True, db_column='ValidityTo', null=True)),
-                ('family', models.OneToOneField(db_column='FamilyID', on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='family_sms', serialize=False, to='insuree.Family')),
+                ('family', models.OneToOneField(db_column='FamilyID', on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='family_notification', serialize=False, to='insuree.Family')),
                 ('approval_of_notification', models.BooleanField(db_column='ApprovalOfSMS', default=False)),
                 ('language_of_notification', models.CharField(db_column='LanguageOfSMS', default='en', max_length=5)),
             ],

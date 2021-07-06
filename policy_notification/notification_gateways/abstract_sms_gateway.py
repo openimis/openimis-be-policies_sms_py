@@ -7,6 +7,16 @@ from policy_notification.notification_gateways.exceptions import GatewayConfigur
 from policy_notification.apps import PolicyNotificationConfig
 
 
+class NotificationSendingResult:
+    def __init__(self, gateway_output=None, success=None, error_message=None):
+        self.output = gateway_output
+        self.success = success if success is not None else bool(gateway_output)
+        self.error_message = error_message
+
+    def __bool__(self):
+        return self.success
+
+
 class NotificationGatewayAbs(ABC):
 
     @property
@@ -23,8 +33,8 @@ class NotificationGatewayAbs(ABC):
         except KeyError as e:
             raise GatewayConfigurationException(type(self), param, self.provider_configuration_key) from e
 
-    def send_notification(self, notification_content, family_number=None):
-        raise NotImplementedError("send_sms not implemented")
+    def send_notification(self, notification_content, family_number=None) -> NotificationSendingResult:
+        raise NotImplementedError("send_notification not implemented")
 
     def build_request(self, builder: BaseSMSBuilder) -> PreparedRequest:
         builder.reset()

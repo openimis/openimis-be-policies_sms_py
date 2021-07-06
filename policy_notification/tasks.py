@@ -1,20 +1,27 @@
+from datetime import datetime
+
+import logging
+
 from .apps import PolicyNotificationConfig
 from .notification_dispatcher import NotificationDispatcher
-from .notification_templates import DefaultSMSTemplates
+from .notification_templates import DefaultNotificationTemplates
 from policy_notification.notification_triggers.notification_triggers import NotificationTriggerEventDetectors
-from .utils import get_sms_providers
+from .utils import get_notification_providers
 
-NOTIFICATION_PROVIDERS = get_sms_providers()
+NOTIFICATION_PROVIDERS = get_notification_providers()
+
+logger = logging.getLogger(__name__)
 
 
-def send_sms_messages():
+def send_notification_messages():
     # Scheduled task run at least once per day
     # All gateways are used to inform insurees
+    logger.info(F"send_notification_messages task called at {datetime.now()}")
     eligible_notification_types = PolicyNotificationConfig.eligible_notification_types
     for provider in NOTIFICATION_PROVIDERS:
         dispatcher = NotificationDispatcher(
             notification_provider=provider,
-            notification_templates_source=DefaultSMSTemplates(),
+            notification_templates_source=DefaultNotificationTemplates(),
             trigger_detector=NotificationTriggerEventDetectors(),
         )
 
