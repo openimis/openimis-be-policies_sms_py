@@ -31,7 +31,7 @@ class PolicyNotificationClient:
 
         current_language = translation.get_language()
         try:
-            translation.activate(policy.family.family_sms.language_of_notification)
+            translation.activate(policy.family.family_notification.language_of_notification)
             custom = template_customs
             message = notification_template % custom
             return self.provider.send_notification(message, family_number=phone)

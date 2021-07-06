@@ -27,25 +27,25 @@ class TestFamilySMSServices(TestCase):
             self.test_family.delete()
 
     def test_create_approve(self):
-        family_sms_entry = create_family_notification_policy(self.test_family.uuid, self.SMS_APPROVED_DATA)
+        family_notification_entry = create_family_notification_policy(self.test_family.uuid, self.SMS_APPROVED_DATA)
 
-        self.assertEqual(family_sms_entry.family, self.test_family)
-        self.assertEqual(family_sms_entry.approval_of_notification, self.SMS_APPROVED_DATA['approvalOfNotification'])
-        self.assertEqual(family_sms_entry.language_of_notification, self.SMS_APPROVED_DATA['languageOfNotification'])
+        self.assertEqual(family_notification_entry.family, self.test_family)
+        self.assertEqual(family_notification_entry.approval_of_notification, self.SMS_APPROVED_DATA['approvalOfNotification'])
+        self.assertEqual(family_notification_entry.language_of_notification, self.SMS_APPROVED_DATA['languageOfNotification'])
 
     def test_create_decline(self):
-        family_sms_entry = create_family_notification_policy(self.test_family.uuid, self.SMS_DECLINED_DATA)
+        family_notification_entry = create_family_notification_policy(self.test_family.uuid, self.SMS_DECLINED_DATA)
 
-        self.assertEqual(family_sms_entry.family, self.test_family)
-        self.assertEqual(family_sms_entry.approval_of_notification, self.SMS_DECLINED_DATA['approvalOfNotification'])
-        self.assertEqual(family_sms_entry.language_of_notification, self.SMS_DECLINED_DATA['languageOfNotification'])
+        self.assertEqual(family_notification_entry.family, self.test_family)
+        self.assertEqual(family_notification_entry.approval_of_notification, self.SMS_DECLINED_DATA['approvalOfNotification'])
+        self.assertEqual(family_notification_entry.language_of_notification, self.SMS_DECLINED_DATA['languageOfNotification'])
 
     def test_create_default(self):
-        family_sms_entry = create_family_notification_policy(self.test_family.uuid)
+        family_notification_entry = create_family_notification_policy(self.test_family.uuid)
 
-        self.assertEqual(family_sms_entry.family, self.test_family)
-        self.assertEqual(family_sms_entry.approval_of_notification, self.EXPECTED_DEFAULT['approvalOfNotification'])
-        self.assertEqual(family_sms_entry.language_of_notification, self.EXPECTED_DEFAULT['languageOfNotification'])
+        self.assertEqual(family_notification_entry.family, self.test_family)
+        self.assertEqual(family_notification_entry.approval_of_notification, self.EXPECTED_DEFAULT['approvalOfNotification'])
+        self.assertEqual(family_notification_entry.language_of_notification, self.EXPECTED_DEFAULT['languageOfNotification'])
 
     def test_update_sms_policy(self):
         create_family_notification_policy(self.test_family.uuid)
@@ -64,7 +64,7 @@ class TestFamilySMSServices(TestCase):
 
     def test_delete_active_family(self):
         expected_values = utils.get_default_notification_data()
-        family_sms_entry = create_family_notification_policy(self.test_family.uuid)
+        family_notification_entry = create_family_notification_policy(self.test_family.uuid)
         output = delete_family_notification_policy([self.test_family.uuid])
         deleted = output[0]
 
@@ -72,12 +72,12 @@ class TestFamilySMSServices(TestCase):
         self.assertEqual(deleted.approval_of_notification, expected_values['approvalOfNotification'])
         self.assertEqual(deleted.language_of_notification, expected_values['languageOfNotification'])
         self.assertEqual(deleted.validity_to, None)  # For active family it's not actually deleted
-        self.assertEqual(family_sms_entry.family, deleted.family)
+        self.assertEqual(family_notification_entry.family, deleted.family)
 
     @patch('insuree.models.Family.validity_to', new_callable=PropertyMock)
     def test_delete_inactive_family(self, validity_to):
         expected_values = utils.get_default_notification_data()
-        family_sms_entry = create_family_notification_policy(self.test_family.uuid)
+        family_notification_entry = create_family_notification_policy(self.test_family.uuid)
 
         validity_to.return_value = datetime.now()  # mock family deletion
         output = delete_family_notification_policy([self.test_family.uuid])
@@ -86,6 +86,6 @@ class TestFamilySMSServices(TestCase):
         self.assertEqual(len(output), 1)
         self.assertEqual(deleted.approval_of_notification, expected_values['approvalOfNotification'])
         self.assertEqual(deleted.language_of_notification, expected_values['languageOfNotification'])
-        self.assertEqual(family_sms_entry.family, deleted.family)
+        self.assertEqual(family_notification_entry.family, deleted.family)
         self.assertIsNotNone(deleted.validity_to)
 

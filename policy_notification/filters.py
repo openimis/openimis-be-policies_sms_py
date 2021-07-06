@@ -1,12 +1,12 @@
 from django.db.models import Q
 
-from .models import FamilySMS
+from .models import FamilyNotification
 
 
 class _Modes:
-    __modes = FamilySMS.FamilyComunicationModes
+    __modes = FamilyNotification.FamilyComunicationModes
     __phone_exists_query = ~(Q(members__phone__in=[None, '']))
-    __approval_exists_query = Q(family_sms__approval_of_notification=True)
+    __approval_exists_query = Q(family_notification__approval_of_notification=True)
 
     FAMILY_REPORT_MODE_QUERIES = {
         __modes.ALL: Q(),
@@ -17,12 +17,12 @@ class _Modes:
     }
 
 
-def communication_approval_filter(family_notification_criterion: FamilySMS.FamilyComunicationModes) -> Q:
-    if family_notification_criterion not in list(map(int, FamilySMS.FamilyComunicationModes)):
+def communication_approval_filter(family_notification_criterion: FamilyNotification.FamilyComunicationModes) -> Q:
+    if family_notification_criterion not in list(map(int, FamilyNotification.FamilyComunicationModes)):
         raise ValueError(f"Given option {family_notification_criterion} for family "
                          f"notification policy is out of scope out of scope.")
     if family_notification_criterion != 0:
-        key = FamilySMS.FamilyComunicationModes(family_notification_criterion)
+        key = FamilyNotification.FamilyComunicationModes(family_notification_criterion)
         mode_filter = _Modes.FAMILY_REPORT_MODE_QUERIES[key]
         return mode_filter
     else:

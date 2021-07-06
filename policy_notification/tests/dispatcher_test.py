@@ -42,8 +42,8 @@ class DispatcherTest(TestCase):
             "insurance_period": 12,
         })
         self.test_family = self.test_insuree.family
-        self.test_family.family_sms = FamilySMS(approval_of_notification=True, language_of_notification='en')
-        self.test_family.family_sms.save()
+        self.test_family.family_notification = FamilyNotification(approval_of_notification=True, language_of_notification='en')
+        self.test_family.family_notification.save()
         self.test_family.save()
         self.policy = create_test_policy(
             product=self.test_product,

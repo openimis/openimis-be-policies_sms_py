@@ -24,7 +24,7 @@ def on_family_create_mutation(mutation_args):
         if not family_uuid:
             return []
     except (Family.DoesNotExist, Insuree.DoesNotExist) as e:
-        logger.warning(F"Family with head insuree with chf {head_of_family_chf} not found, FamilySMS was not created")
+        logger.warning(F"Family with head insuree with chf {head_of_family_chf} not found, FamilyNotification was not created")
     except Exception as e:
         import traceback
         logger.error("Error ocurred during creating new familySMS, traceback: ")
@@ -43,7 +43,7 @@ def on_family_update_mutation(mutation_args):
         return []
 
     if not family_notification_policy_update:
-        logger.warning(F"FamilySMS is being updated but contribution.policySms is empty, "
+        logger.warning(F"FamilyNotification is being updated but contribution.policySms is empty, "
                        F"content of contribution field:\n {mutation_args['data'].get('contribution', {})}.")
         return []
 

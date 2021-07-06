@@ -5,30 +5,30 @@ It is dedicated to be deployed as a module of [openimis-be_py](https://github.co
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ## ORM mapping:
-* FamilySMS > tblFamilySMS 
+* FamilyNotification > tblFamilySMS 
 
 ## Listened Django Signals:
 * After Family mutation 
-    * CreateFamilyMutation - create FamilySMS object connected with created family
-    * UpdateFamilyMutation - update FamilySMS object connected with updated family
-    * DeleteFamiliesMutation - delete FamilySMS object connected with deleted family
+    * CreateFamilyMutation - create FamilyNotification object connected with created family
+    * UpdateFamilyMutation - update FamilyNotification object connected with updated family
+    * DeleteFamiliesMutation - delete FamilyNotification object connected with deleted family
 * Family additional filter
     * Use mode from additional_filter.PolicyNotification to additionally query families by 
     notification eligibility
 
 ## Services
 ### Family notification 
-Create FamilySMS object connected with family with given uuid. 
+Create FamilyNotification object connected with family with given uuid. 
 ```python
 create_family_notification_policy(uuid, notification_data)
 ```
 
-Update FamilySMS object connected with family with given uuid. 
+Update FamilyNotification object connected with family with given uuid. 
 ```python
 update_family_notification_policy(uuid, notification_data)
 ```
 
-Delete FamilySMS object connected with family with given uuid. 
+Delete FamilyNotification object connected with family with given uuid. 
 ```python
 delete_family_notification_policy(uuid, notification_data)
 ```

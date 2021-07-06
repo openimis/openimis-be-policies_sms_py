@@ -102,7 +102,7 @@ class NotificationDispatcher:
     def _get_eligible_policies(self, policies_ids, type_of_notification):
         base_eligibility = Policy.objects \
             .filter(id__in=policies_ids) \
-            .filter(family__family_sms__approval_of_notification=True)
+            .filter(family__family_notification__approval_of_notification=True)
 
         if hasattr(IndicationOfPolicyNotifications, type_of_notification):
             # Confirm that for given policy notification was not sent
