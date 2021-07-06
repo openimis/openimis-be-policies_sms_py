@@ -1,12 +1,13 @@
 from location.models import Location
-from policy_notification.models import FamilySMS
+from policy_notification.models import FamilyNotification
+from django.utils.translation import ugettext as _
 
 REPORT_MODE_STRING_REPRESENTATION = {
-        FamilySMS.FamilyComunicationModes.ALL: 'All',
-        FamilySMS.FamilyComunicationModes.FULL_COMMUNICATION_ENABLED_CODE: 'Approval and phone number',
-        FamilySMS.FamilyComunicationModes.APPROVAL_NO_PHONE_NUMBER_CODE: 'Approval only',
-        FamilySMS.FamilyComunicationModes.NO_APPROVAL_PHONE_NUMBER_CODE: 'Phone number only',
-        FamilySMS.FamilyComunicationModes.NO_APPROVAL_NO_PHONE_NUMBER_CODE: 'No approval and phone number'
+        FamilyNotification.FamilyComunicationModes.ALL: _('policy_notification.Mode.0'),
+        FamilyNotification.FamilyComunicationModes.FULL_COMMUNICATION_ENABLED_CODE: _('policy_notification.Mode.1'),
+        FamilyNotification.FamilyComunicationModes.APPROVAL_NO_PHONE_NUMBER_CODE: _('policy_notification.Mode.2'),
+        FamilyNotification.FamilyComunicationModes.NO_APPROVAL_PHONE_NUMBER_CODE: _('policy_notification.Mode.3'),
+        FamilyNotification.FamilyComunicationModes.NO_APPROVAL_NO_PHONE_NUMBER_CODE: _('policy_notification.Mode.4')
 }
 
 
@@ -14,7 +15,7 @@ class CommunicationByNotificationReportBuilder:
 
     def build_report_data(self, families, region=None, district=None,
                           enrollment_officer=None, mode=0, other_filters=None):
-        mode = FamilySMS.FamilyComunicationModes(mode)
+        mode = FamilyNotification.FamilyComunicationModes(mode)
         return {
             'report_region': self.__location_repr(region) if region else "",
             'report_district': self.__location_repr(district) if district else "",
@@ -36,8 +37,8 @@ class CommunicationByNotificationReportBuilder:
                 'family_head_chf': str(family.head_insuree.chf_id),
                 'family_head_given_name': str(family.head_insuree.other_names),
                 'family_head_last_name': str(family.head_insuree.last_name),
-                'family_notification_approval': str(family.family_sms.approval_of_notification),
-                'family_notification_language': str(family.family_sms.language_of_notification),
+                'family_notification_approval': str(family.family_notification.approval_of_notification),
+                'family_notification_language': str(family.family_notification.language_of_notification),
                 'family_head_phone': str(family.head_insuree.phone) if family.head_insuree.phone else '',
                 'family_alternative_given_name': '',
                 'family_alternative_last_name': '',
