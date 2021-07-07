@@ -100,15 +100,15 @@ class PolicyNotificationConfig(AppConfig):
             PolicyNotificationConfig.trigger_last_call_hour = hour
 
         else:
-            if ',' in hours:
+            if ',' in hour:
                 # Example: "8,12,16,20", execution with interval of 4 hours between 8 a.m. and 20 p.m.
-                hours =[int(x) for x in hours.split(',')]
+                hours =[int(x) for x in hour.split(',')]
                 PolicyNotificationConfig.trigger_time_interval_hours = hours[0]-hours[1]
                 PolicyNotificationConfig.trigger_first_call_hour = hours[0]
                 PolicyNotificationConfig.trigger_last_call_hour = hours[-1]
-            elif '-' in hours:
+            elif '-' in hour:
                 # Example: 8-16, hourly execution between 8 and 16
-                hours =[int(x) for x in hours.split('-')]
+                hours =[int(x) for x in hour.split('-')]
                 PolicyNotificationConfig.trigger_time_interval_hours = 1
                 PolicyNotificationConfig.trigger_first_call_hour = hours[0]
                 PolicyNotificationConfig.trigger_last_call_hour = hours[1]

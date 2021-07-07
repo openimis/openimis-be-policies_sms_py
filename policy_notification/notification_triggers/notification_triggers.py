@@ -230,4 +230,12 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
         offset = (now - timedelta(hours=cls.FIRST_CALL_HOUR, minutes=1)).date()
         return offset < now.date()
 
+    @classmethod
+    def assign_default_intervals(cls):
+        # when called form scheduled task, this variables might be None instead of actual config.
+        cls.TIME_INTERVAL_HOURS = PolicyNotificationConfig.trigger_time_interval_hours
+        cls.FIRST_CALL_HOUR = PolicyNotificationConfig.trigger_first_call_hour
+        cls.LAST_CALL_HOUR = PolicyNotificationConfig.trigger_last_call_hour
+        cls.REMINDER_BEFORE_EXPIRY_DAYS = PolicyNotificationConfig.reminder_before_expiry_days
+        cls.REMINDER_AFTER_EXPIRY_DAYS = PolicyNotificationConfig.reminder_after_expiry_days
 
