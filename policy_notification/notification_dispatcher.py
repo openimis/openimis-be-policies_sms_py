@@ -54,7 +54,7 @@ class NotificationDispatcher:
             policies, self.templates.notification_after_expiry, 'reminder_after_expiration')
 
     def send_notification_expiring_today_policies(self):
-        policies = self.trigger_detector.find_newly_activated_policies()
+        policies = self.trigger_detector.find_expiring_today_policies()
         self._send_notification_for_eligible_policies(
             policies, self.templates.notification_on_expiration, 'expiration_of_policy')
 

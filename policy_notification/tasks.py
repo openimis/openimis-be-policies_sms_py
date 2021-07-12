@@ -26,7 +26,7 @@ def send_notification_messages():
             # Scheduled task run at least once per day
             # All gateways are used to inform insurees
             dispatcher = NotificationDispatcher(
-                notification_provider=provider,
+                notification_provider=provider(),
                 notification_templates_source=DefaultNotificationTemplates(),
                 trigger_detector=event_detector,
             )
