@@ -18,17 +18,14 @@ def __create_family_approval(family):
         language_of_notification=defaults['languageOfNotification'],
         family=family
     )
-    new_approval.save()
+    return new_approval
 
 
 def add_defaults_family_notification_approval(apps, schema_editor):
-    for family in Family.objects.filter(validity_to=None).all():
-        try:
-            family_notification = Family.family_notification
-            if family_notification:
-                __create_family_approval(family)
-        except FamilyNotification.DoesNotExist:
-            __create_family_approval(family)
+    families = Family.objects.filter(validity_to=None, family_notification__isnull=True).iterator()
+    FamilyNotification.objects.bulk_create(
+        (__create_family_approval(family) for family in families)
+    )
 
 
 class Migration(migrations.Migration):
