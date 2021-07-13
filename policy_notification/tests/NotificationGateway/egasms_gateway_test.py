@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from unittest.mock import patch, PropertyMock
 from unittest import TestCase
 
@@ -9,17 +11,21 @@ from policy_notification.notification_gateways.RequestBuilders import BaseSMSBui
 
 class TestEGASMSGateway(TestCase):
     BUILDER = BaseSMSBuilder()
-    MESSAGE_CONTENT = 'Test sms message'
+    MESSAGE_CONTENT = json.dumps({
+        'data': json.dumps({'message':'test','datetime':'2021-07-13 11:16:34','sender_id':'sender_id','mobile_service_id':'service_id','recipients':'1'}),
+        'datetime': "2021-07-13 11:16:34"
+    })
+    
     TEST_PROVIDER_CONFIG = {
         "GateUrl": "http://127.0.0.1:8000",
         "SmsResource": "/api/gateway_endpoint/",
-        "PrivateKey": "endpoint_private_key",
+        "PrivateKey": "private_key",
         "UserId": "test_user_id",
-        "SenderId": "test_sender_id",
-        "ServiceId": "test_service_id",
+        "SenderId": "sender_id",
+        "ServiceId": "service_id",
         "RequestType": "api",
         "HeaderKeys": "X-Auth-Request-Hash,X-Auth-Request-Id,X-Auth-Request-Type",
-        "HeaderValues": "PrivateKey,UserId,RequestType"
+        "HeaderValues": "HashMessage1,UserId,RequestType"
     }
 
     TEST_MODULE_CONFIG = {
@@ -32,7 +38,7 @@ class TestEGASMSGateway(TestCase):
         'url': "http://127.0.0.1:8000/api/gateway_endpoint/",
         'body': MESSAGE_CONTENT,
         'headers': {
-            'X-Auth-Request-Hash': 'endpoint_private_key',
+            'X-Auth-Request-Hash': 'ZUCqgexNmJ6SomvnJShc3m9L3Plky6zRliOjkv/BnGc=',
             'X-Auth-Request-Id': 'test_user_id',
             'X-Auth-Request-Type': 'api',
             'Content-Length': str(len(MESSAGE_CONTENT))
@@ -40,18 +46,20 @@ class TestEGASMSGateway(TestCase):
     }
 
     def setUp(self):
+        self.maxDiff = None
         self.request_called = None
 
     def assign_test_output(self, output):
         self.request_called = output
 
     @patch('policy_notification.apps.PolicyNotificationConfig.providers', new_callable=PropertyMock)
-    def test_gateway_send_sms(self, config):
+    @patch('policy_notification.notification_gateways.eGASMSGateway.datetime')
+    def test_gateway_send_sms(self, mocked_dt, config):
         config.return_value = self.TEST_MODULE_CONFIG['providers']
-
+        mocked_dt.datetime.now.return_value = datetime(2021, 7, 13, 11, 16, 34)
         gateway = EGASMSGateway(self.BUILDER)
         with patch.object(requests.Session, 'send', side_effect=self.assign_test_output) as mock_method:
-            output = gateway.send_notification(self.MESSAGE_CONTENT)
+            output = gateway.send_notification('test', family_number="1")
             self._assert_request(self.request_called)
             mock_method.assert_called_once_with(self.request_called)
 
