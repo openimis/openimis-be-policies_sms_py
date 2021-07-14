@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class EGASMSGateway(NotificationGatewayAbs):
+    # Use utc+3 timezone
+    _GATEWAY_TIMEZONE_OFFSET = 3
 
     def __init__(self, builder=BaseSMSBuilder()):
         self.builder = builder
@@ -38,7 +40,8 @@ class EGASMSGateway(NotificationGatewayAbs):
     def send_notification(self, notification_content, family_number=None, builder=None) -> NotificationSendingResult:
         self.message_sent = notification_content
         self.family_number = family_number
-        self.sending_time = datetime.datetime.now()
+        self.sending_time = datetime.datetime.now(tz=datetime.timezone.utc)
+        self.sending_time += datetime.timedelta(hours=self._GATEWAY_TIMEZONE_OFFSET)
 
         builder = builder or self.builder
         request = self.build_request(builder)

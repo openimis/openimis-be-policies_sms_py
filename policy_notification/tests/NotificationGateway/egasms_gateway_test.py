@@ -11,8 +11,16 @@ from policy_notification.notification_gateways.RequestBuilders import BaseSMSBui
 
 class TestEGASMSGateway(TestCase):
     BUILDER = BaseSMSBuilder()
+    MOCKED_SENDING_TIME_UTC_NOW = datetime(2021, 7, 13, 8, 16, 34)
+
     MESSAGE_CONTENT = json.dumps({
-        'data': json.dumps({'message':'test','datetime':'2021-07-13 11:16:34','sender_id':'sender_id','mobile_service_id':'service_id','recipients':'1'}),
+        'data': json.dumps({
+            'message': 'test',
+            'datetime': '2021-07-13 11:16:34',
+            'sender_id': 'sender_id',
+            'mobile_service_id': 'service_id',
+            'recipients': '1'
+        }),
         'datetime': "2021-07-13 11:16:34"
     })
     
@@ -53,10 +61,10 @@ class TestEGASMSGateway(TestCase):
         self.request_called = output
 
     @patch('policy_notification.apps.PolicyNotificationConfig.providers', new_callable=PropertyMock)
-    @patch('policy_notification.notification_gateways.eGASMSGateway.datetime')
+    @patch('policy_notification.notification_gateways.eGASMSGateway.datetime.datetime')
     def test_gateway_send_sms(self, mocked_dt, config):
         config.return_value = self.TEST_MODULE_CONFIG['providers']
-        mocked_dt.datetime.now.return_value = datetime(2021, 7, 13, 11, 16, 34)
+        mocked_dt.now.return_value = self.MOCKED_SENDING_TIME_UTC_NOW
         gateway = EGASMSGateway(self.BUILDER)
         with patch.object(requests.Session, 'send', side_effect=self.assign_test_output) as mock_method:
             output = gateway.send_notification('test', family_number="1")
