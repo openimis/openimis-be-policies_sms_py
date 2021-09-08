@@ -1,9 +1,13 @@
+import logging
+
 from core.models import Language
 from core.utils import get_first_or_default_language
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.db.models import Q
 
 from policy_notification.apps import PolicyNotificationConfig
+
+logger = logging.getLogger(__name__)
 
 
 def get_default_notification_data():
@@ -40,11 +44,20 @@ def get_notification_providers():
     """
     notification_module = __import__("policy_notification.notification_gateways", fromlist=['*'])
     available_providers = dict(
-        [(name, cls) for name, cls in notification_module.__dict__.items() if isinstance(cls, type)]
+        [(name.lower(), cls) for name, cls in notification_module.__dict__.items() if isinstance(cls, type)]
     )
     providers_from_config = [v.lower() for v in PolicyNotificationConfig.providers.keys()]
+    adaptors = []
+    for provider_config in providers_from_config:
+        implementation = available_providers.get(provider_config, None)
+        if not implementation:
+            logger.error(f"Configuration for provider adaptor {provider_config} found, but given adaptor "
+                         f"does not have available implementation, allowed implementations are: "
+                         f"{available_providers.keys()} (case insensitive)")
+        else:
+            adaptors.append(implementation)
 
-    return [cls for name, cls in available_providers.items() if name.lower() in providers_from_config]
+    return adaptors
 
 
 def get_family_member_with_phone(family):
