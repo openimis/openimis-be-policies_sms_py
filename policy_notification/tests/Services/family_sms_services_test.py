@@ -22,9 +22,14 @@ class TestFamilySMSServices(TestCase):
 
     def tearDown(self):
         if self.test_insuree:
-            self.test_insuree.delete()
+            self.test_insuree.family = None
+            self.test_insuree.save()
+
         if self.test_family:
             self.test_family.delete()
+
+        if self.test_insuree:
+            self.test_insuree.delete()
 
     def test_create_approve(self):
         family_notification_entry = create_family_notification_policy(self.test_family.uuid, self.SMS_APPROVED_DATA)
