@@ -20,9 +20,9 @@ class TestEGASMSGateway(TestCase):
             'sender_id': 'sender_id',
             'mobile_service_id': 'service_id',
             'recipients': '1'
-        }),
+        }, separators=(',', ':')),
         'datetime': "2021-07-13 11:16:34"
-    })
+    }, separators=(',', ':'))
     
     TEST_PROVIDER_CONFIG = {
         "GateUrl": "http://127.0.0.1:8000",
@@ -46,7 +46,7 @@ class TestEGASMSGateway(TestCase):
         'url': "http://127.0.0.1:8000/api/gateway_endpoint/",
         'body': MESSAGE_CONTENT,
         'headers': {
-            'X-Auth-Request-Hash': 'ZUCqgexNmJ6SomvnJShc3m9L3Plky6zRliOjkv/BnGc=',
+            'X-Auth-Request-Hash': 'lI/b3Yz3uIByNpQy+D2xcfBK5I9uoPUAE/sqtw1COxw=',
             'X-Auth-Request-Id': 'test_user_id',
             'X-Auth-Request-Type': 'api',
             'Content-Length': str(len(MESSAGE_CONTENT))

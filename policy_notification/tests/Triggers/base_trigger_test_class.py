@@ -29,9 +29,12 @@ class BaseTriggerTestCase(TestCase):
 
         InsureePolicy.objects.get(policy=self.policy).delete()
 
+        self.test_insuree.family = None
+        self.test_insuree.save()
+
         self.policy.delete()
-        self.test_insuree.delete()
         self.test_family.delete()
+        self.test_insuree.delete()
         self.test_product.delete()
 
     def create_policy(self):
