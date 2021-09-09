@@ -76,7 +76,7 @@ class EGASMSGateway(NotificationGatewayAbs):
         return json.dumps({
             'data': self._get_message_content(self.message_sent),
             'datetime': self.sending_time.strftime('%Y-%m-%d %H:%M:%S')
-        })
+        }, separators=(',', ':'))
 
     def get_request_url(self):
         return self.get_provider_config_param('GateUrl') + self.get_provider_config_param('SmsResource')
@@ -93,8 +93,8 @@ class EGASMSGateway(NotificationGatewayAbs):
         message = self._get_message_content(self.message_sent)
 
         signature = hmac.new(
-            str.encode(key, encoding='ascii'),
-            str.encode(message, encoding='ascii'),
+            bytes(key, encoding='ascii'),
+            bytes(message, encoding='ascii'),
             hashlib.sha256
         )
         header_hash = base64.b64encode(signature.digest()).decode()
@@ -107,5 +107,5 @@ class EGASMSGateway(NotificationGatewayAbs):
             "sender_id": self.get_provider_config_param('SenderId'),
             "mobile_service_id": self.get_provider_config_param('ServiceId'),
             "recipients": self.family_number
-        })
+        }, separators=(',', ':'))
 
