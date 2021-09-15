@@ -49,7 +49,8 @@ class TestEGASMSGateway(TestCase):
             'X-Auth-Request-Hash': 'lI/b3Yz3uIByNpQy+D2xcfBK5I9uoPUAE/sqtw1COxw=',
             'X-Auth-Request-Id': 'test_user_id',
             'X-Auth-Request-Type': 'api',
-            'Content-Length': str(len(MESSAGE_CONTENT))
+            'Content-Length': str(len(MESSAGE_CONTENT)),
+            'content-type': 'application/json'
         }
     }
 
