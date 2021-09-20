@@ -1,3 +1,4 @@
+from datetime import timedelta, date
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -52,7 +53,8 @@ class DispatcherTest(TestCase):
             insuree=self.test_insuree,
             custom_props={
              "status": 2,
-             "validity_from": datetime(2021, 6, 1, 10)
+             "validity_from": datetime(2021, 6, 1, 10),
+             "effective_date": date(2019, 1, 1)
         })
 
         self.test_custom_props = {
@@ -82,6 +84,7 @@ class DispatcherTest(TestCase):
     def test_send_notification_for_eligible_policies_already_sent(self, find_policies):
         self.policy.indication_of_notifications = IndicationOfPolicyNotifications()
         self.policy.indication_of_notifications.activation_of_policy = datetime.now()
+        self.policy.effective_date = self.policy.effective_date + timedelta(days=1)
         self.policy.indication_of_notifications.save()
         self.policy.save()
 
@@ -93,4 +96,15 @@ class DispatcherTest(TestCase):
             dispatcher.send_notification_new_active_policies()
             mock_sent.assert_not_called()
 
+    @patch('policy_notification.notification_triggers.NotificationTriggerEventDetectors.find_newly_activated_policies')
+    def test_no_active_notification_for_policy_starting_same_day(self, find_policies):
+        find_policies.return_value = [self.policy.id]
+        self.policy.effective_date = datetime.now()
+        self.policy.save()
 
+        with patch.object(TextNotificationProvider, 'send_notification', return_value=None) as mock_sent:
+            provider = TextNotificationProvider()
+
+            dispatcher = NotificationDispatcher(provider, self.TEST_TEMPLATES(), self.TEST_TRIGGER_DETECTOR())
+            dispatcher.send_notification_new_active_policies()
+            mock_sent.assert_not_called()

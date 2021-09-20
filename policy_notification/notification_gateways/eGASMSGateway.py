@@ -10,7 +10,6 @@ from policy_notification.notification_gateways.RequestBuilders import BaseSMSBui
 from policy_notification.notification_gateways.abstract_sms_gateway import NotificationGatewayAbs, \
     NotificationSendingResult
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -47,11 +46,16 @@ class EGASMSGateway(NotificationGatewayAbs):
         request = self.build_request(builder)
         s = requests.Session()
         response = s.send(request)
-        success = (response and response.status_code == 200)
-        if response and response.status_code != 200:
-            logger.warning(f"Notification request sent, but resulted in "
-                           f"status {response.status_code}, "
-                           f"content of response: {response.content}")
+        success = self._check_success(response)
+        logger.info(f'eGA request success: {success}')
+        if not success:
+            if response is not None:
+                logger.warning(f"eGA Gateway: Notification request sent, resulted in "
+                               f"status {response.status_code}, "
+                               f"content of response: {response.content}")
+            else:
+                logger.warning("eGA Gateway: Notification request sent, no response")
+
         return NotificationSendingResult(response, success=success)
 
     def get_auth(self):
@@ -61,13 +65,12 @@ class EGASMSGateway(NotificationGatewayAbs):
     def get_headers(self):
         header_keys = self.get_provider_config_param('HeaderKeys')
         header_values = self.get_provider_config_param('HeaderValues')
+        base_headers = {'content-type': 'application/json'}
         if header_values != '' and header_keys != '':
             header_dict = dict(zip(header_keys.split(','), header_values.split(',')))
-            header_dict_with_actual_values = \
-                {k: self.header_value(v) for k, v in header_dict.items()}
-            return header_dict_with_actual_values
-        else:
-            return {}
+            header_values = {k: self.header_value(v) for k, v in header_dict.items()}
+            base_headers.update(header_values)
+        return base_headers
 
     def get_method(self):
         return 'POST'
@@ -109,3 +112,9 @@ class EGASMSGateway(NotificationGatewayAbs):
             "recipients": self.family_number
         }, separators=(',', ':'))
 
+    def _check_success(self, server_response):
+        if not server_response or server_response.status_code != 200:
+            return False
+        else:
+            content = server_response.json()
+            return not content.get('error', False)

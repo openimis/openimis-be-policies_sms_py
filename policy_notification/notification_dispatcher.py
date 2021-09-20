@@ -5,14 +5,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 
 from .models import IndicationOfPolicyNotifications
+from .notification_eligibility_validators import PolicyEligibilityValidation
 from .notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
 from .notification_templates import DefaultNotificationTemplates
 from policy_notification.notification_triggers import NotificationTriggerEventDetectors
 from .notification_triggers import NotificationTriggerAbs
 from .notification_client import PolicyNotificationClient
 from policy.models import Policy, PolicyRenewal
-from django.utils import translation
-from policy_notification.utils import get_family_member_with_phone
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +22,12 @@ class NotificationDispatcher:
 
     def __init__(self, notification_provider: NotificationGatewayAbs,
                  notification_templates_source: DefaultNotificationTemplates = DefaultNotificationTemplates,
-                 trigger_detector: NotificationTriggerAbs = NotificationTriggerEventDetectors):
+                 trigger_detector: NotificationTriggerAbs = NotificationTriggerEventDetectors,
+                 eligibility_validation: PolicyEligibilityValidation = PolicyEligibilityValidation()):
         self.notification_client = PolicyNotificationClient(notification_provider=notification_provider)
         self.templates = notification_templates_source
         self.trigger_detector = trigger_detector
+        self.eligibility_validation = eligibility_validation
 
     def send_notification_new_active_policies(self):
         policies = self.trigger_detector.find_newly_activated_policies()
@@ -100,17 +101,25 @@ class NotificationDispatcher:
         return self.notification_client.send_notification_from_template(policy, notification_template, custom)
 
     def _get_eligible_policies(self, policies_ids, type_of_notification):
-        base_eligibility = Policy.objects \
+        policies = Policy.objects \
             .filter(id__in=policies_ids) \
             .filter(family__family_notification__approval_of_notification=True)
 
+        base_eligibility = self.__base_eligibility(policies, type_of_notification)
+        additional_eligibility = self.__additional_eligibility(base_eligibility, type_of_notification)
+        return additional_eligibility
+
+    def __base_eligibility(self, policies, type_of_notification):
         if hasattr(IndicationOfPolicyNotifications, type_of_notification):
             # Confirm that for given policy notification was not sent
             indication_filter = {
                 f"indication_of_notifications__{type_of_notification}__isnull": True,
             }
             indication_filter = Q(indication_of_notifications__isnull=True) | Q(**indication_filter)
-            base_eligibility = base_eligibility.filter(indication_filter)
+            policies = policies.filter(indication_filter)
         else:
             logger.warning(self.NOTIFICATION_NOT_IN_INDICATION_TABLE.format(type_of_notification))
-        return base_eligibility
+        return policies
+
+    def __additional_eligibility(self, policies, type_of_notification):
+        return self.eligibility_validation.validate_eligibility(policies, type_of_notification)
