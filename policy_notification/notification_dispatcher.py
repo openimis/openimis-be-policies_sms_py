@@ -1,17 +1,16 @@
 import logging
 from datetime import datetime
+from typing import Type
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
-
-from .models import IndicationOfPolicyNotifications
-from .notification_eligibility_validators import PolicyEligibilityValidation
+from .models import IndicationOfPolicyNotifications, IndicationOfPolicyNotificationsDetails
+from .notification_eligibility_validators import PolicyNotificationEligibilityValidation
 from .notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
 from .notification_templates import DefaultNotificationTemplates
 from policy_notification.notification_triggers import NotificationTriggerEventDetectors
 from .notification_triggers import NotificationTriggerAbs
 from .notification_client import PolicyNotificationClient
-from policy.models import Policy, PolicyRenewal
+from policy.models import Policy
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +19,20 @@ class NotificationDispatcher:
     NOTIFICATION_NOT_IN_INDICATION_TABLE = "Notification of type {notification} doesn't have representation " \
                                            "in IndicationOfPolicyNotifications table."
 
-    def __init__(self, notification_provider: NotificationGatewayAbs,
-                 notification_templates_source: DefaultNotificationTemplates = DefaultNotificationTemplates,
-                 trigger_detector: NotificationTriggerAbs = NotificationTriggerEventDetectors,
-                 eligibility_validation: PolicyEligibilityValidation = PolicyEligibilityValidation()):
+    def __init__(
+        self,
+        notification_provider: NotificationGatewayAbs,
+        notification_templates_source: DefaultNotificationTemplates = DefaultNotificationTemplates,
+        trigger_detector: NotificationTriggerAbs = NotificationTriggerEventDetectors,
+        eligibility_validation: Type[PolicyNotificationEligibilityValidation] = PolicyNotificationEligibilityValidation
+    ):
         self.notification_client = PolicyNotificationClient(notification_provider=notification_provider)
         self.templates = notification_templates_source
         self.trigger_detector = trigger_detector
         self.eligibility_validation = eligibility_validation
 
     def send_notification_new_active_policies(self):
-        policies = self.trigger_detector.find_newly_activated_policies()
+        policies = self.trigger_detector.find_activated_policies()
         self._send_notification_for_eligible_policies(
             policies, self.templates.notification_on_activation, 'activation_of_policy')
 
@@ -40,7 +42,7 @@ class NotificationDispatcher:
             policies, self.templates.notification_on_effective, 'starting_of_policy')
 
     def send_notification_new_renewed_policies(self):
-        policies = self.trigger_detector.find_newly_renewed_policies()
+        policies = self.trigger_detector.find_renewed_policies()
         self._send_notification_for_eligible_policies(
             policies, self.templates.notification_on_renewal, 'renewal_of_policy')
 
@@ -83,17 +85,10 @@ class NotificationDispatcher:
             result = self._send_notification(policy, notification_template)
             if result:
                 notification_sent_successfully.append(policy)
-            try:
-                indication = policy.indication_of_notifications
-            except ObjectDoesNotExist:
-                indication = IndicationOfPolicyNotifications(policy=policy)
 
-            if not hasattr(indication, type_of_notification):
-                logger.warning(self.NOTIFICATION_NOT_IN_INDICATION_TABLE.format(type_of_notification))
-            else:
-                if result:
-                    setattr(indication, type_of_notification, datetime.now())
-                    indication.save()
+            indication = self._get_or_create_policy_indication(policy)
+            self._update_indication(indication, type_of_notification, result)
+
         return notification_sent_successfully
 
     def _send_notification(self, policy, notification_template):
@@ -101,25 +96,34 @@ class NotificationDispatcher:
         return self.notification_client.send_notification_from_template(policy, notification_template, custom)
 
     def _get_eligible_policies(self, policies_ids, type_of_notification):
-        policies = Policy.objects \
-            .filter(id__in=policies_ids) \
-            .filter(family__family_notification__approval_of_notification=True)
+        policies = Policy.objects.filter(id__in=policies_ids)
+        validator = self.eligibility_validation(policies, type_of_notification)
+        validator.validate_notification_eligibility()
+        return validator.valid_collection
 
-        base_eligibility = self.__base_eligibility(policies, type_of_notification)
-        additional_eligibility = self.__additional_eligibility(base_eligibility, type_of_notification)
-        return additional_eligibility
+    def _get_or_create_policy_indication(self, policy):
+        try:
+            return policy.indication_of_notifications
+        except ObjectDoesNotExist:
+            return IndicationOfPolicyNotifications(policy=policy)
 
-    def __base_eligibility(self, policies, type_of_notification):
-        if hasattr(IndicationOfPolicyNotifications, type_of_notification):
-            # Confirm that for given policy notification was not sent
-            indication_filter = {
-                f"indication_of_notifications__{type_of_notification}__isnull": True,
-            }
-            indication_filter = Q(indication_of_notifications__isnull=True) | Q(**indication_filter)
-            policies = policies.filter(indication_filter)
-        else:
+    def _update_indication(self, indication, type_of_notification, result):
+        if not hasattr(indication, type_of_notification):
             logger.warning(self.NOTIFICATION_NOT_IN_INDICATION_TABLE.format(type_of_notification))
-        return policies
+        else:
+            if result:
+                setattr(indication, type_of_notification, datetime.now())
+                indication.save()
 
-    def __additional_eligibility(self, policies, type_of_notification):
-        return self.eligibility_validation.validate_eligibility(policies, type_of_notification)
+        self._create_indication_details(indication, type_of_notification, result)
+
+    def _create_indication_details(self, indication, type_of_notification, result):
+        indication = IndicationOfPolicyNotificationsDetails(**{
+            'indication_of_notification': indication,
+            'notification_type': type_of_notification,
+            'status':
+                IndicationOfPolicyNotificationsDetails.SendIndicationStatus.SENT_SUCCESSFULLY if bool(result) is True
+                else IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_DUE_TO_ERROR,
+            'details': None if bool(result) else result.output
+        })
+        indication.save()

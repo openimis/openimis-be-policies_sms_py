@@ -26,8 +26,9 @@ class PolicyNotificationClient:
             else:
                 logger.error(F"Failed to send notification for family with head {policy.family.head_insuree}, "
                              F"insuree doesn't have assigned phone number")
-                return NotificationSendingResult(gateway_output=None, success=False,
-                                                 error_message=_("Family without phone number assigned"))
+                return NotificationSendingResult(
+                    gateway_output=None, success=False, error_message=_("Family without phone number assigned")
+                )
 
         current_language = translation.get_language()
         try:

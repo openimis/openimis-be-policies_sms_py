@@ -10,7 +10,7 @@ from policy_notification.services import *
 
 class TestFamilySMSServices(TestCase):
     SMS_APPROVED_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'en'}
-    SMS_DECLINED_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'fr'}
+    SMS_DECLINED_DATA = {'approvalOfNotification': False, 'languageOfNotification': 'fr'}
     EXPECTED_DEFAULT = {'approvalOfNotification': False, 'languageOfNotification': 'en'}
     SMS_INVALID_LANGUAGE_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'uv'}
     SMS_UPDATE_DATA = {'approvalOfNotification': True, 'languageOfNotification': 'fr'}

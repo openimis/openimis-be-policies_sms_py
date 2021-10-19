@@ -1,9 +1,12 @@
+from datetime import date
+
 from django.db import models
 from core import models as core_models
 from core.utils import get_first_or_default_language
 from insuree.models import Family
 from policy.models import Policy
 from enum import IntEnum
+from jsonfallback.fields import FallbackJSONField
 
 
 class FamilyNotification(core_models.BaseVersionedModel):
@@ -40,3 +43,26 @@ class IndicationOfPolicyNotifications(core_models.BaseVersionedModel):
 
     class Meta:
         db_table = 'tblIndicationOfPolicyNotifications'
+
+
+class IndicationOfPolicyNotificationsDetails(core_models.BaseVersionedModel):
+    class SendIndicationStatus(models.IntegerChoices):
+        UNDEFINED = 0
+        SENT_SUCCESSFULLY = 1
+        NOT_SENT_NO_PERMISSION_FOR_NOTIFICATIONS = 2
+        NOT_SENT_NOTIFICATION_FOR_OBSOLETE_EVENT = 3
+        NOT_SENT_DUE_TO_ERROR = 4
+        NOT_PASSED_VALIDATION = 5
+
+    indication_of_notification = models.ForeignKey(
+        IndicationOfPolicyNotifications, models.CASCADE, db_column='indicationID', related_name="details"
+    )
+    notification_type = models.CharField(db_column='notification_type', max_length=255, null=False)
+    status = models.SmallIntegerField(
+        db_column='Status', null=False, choices=SendIndicationStatus.choices, default=SendIndicationStatus.UNDEFINED
+    )
+    details = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'tblIndicationOfPolicyNotificationsDetails'
+
