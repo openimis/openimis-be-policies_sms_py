@@ -124,6 +124,6 @@ class NotificationDispatcher:
             'status':
                 IndicationOfPolicyNotificationsDetails.SendIndicationStatus.SENT_SUCCESSFULLY if bool(result) is True
                 else IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_DUE_TO_ERROR,
-            'details': None if bool(result) else result.output
+            'details': None if bool(result) or result is None else result.output
         })
         indication.save()
