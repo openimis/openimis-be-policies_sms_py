@@ -1,5 +1,5 @@
 from datetime import timedelta, date
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 from django.test import TestCase
 from policy.test_helpers import create_test_policy
@@ -7,6 +7,7 @@ from insuree.test_helpers import create_test_insuree
 from insuree.models import InsureePolicy
 from product.test_helpers import create_test_product
 
+from policy.values import policy_values
 from policy_notification.apps import PolicyNotificationConfig
 from policy_notification.models import IndicationOfPolicyNotifications, IndicationOfPolicyNotificationsDetails
 from policy_notification.notification_dispatcher import NotificationDispatcher
@@ -55,7 +56,9 @@ class DispatcherTest(TestCase):
             custom_props={
              "status": 2,
              "validity_from": datetime(2021, 6, 1, 10),
-             "effective_date": date(2019, 1, 1)
+             "effective_date": date(2019, 1, 1),
+             "enroll_date": date(2019, 1, 1),
+             "start_date": date(2019, 1, 1),
         })
 
         self.test_custom_props = {
@@ -64,7 +67,8 @@ class DispatcherTest(TestCase):
             'EffectiveDate': self.policy.effective_date,
             'ExpiryDate': self.policy.expiry_date,
             'ProductCode': self.policy.product.code,
-            'ProductName': self.policy.product.name
+            'ProductName': self.policy.product.name,
+            'AmountToBePaid': policy_values(self.policy, self.policy.family, self.policy)[0].value
         }
 
     @patch('policy_notification.notification_triggers.NotificationTriggerEventDetectors.find_activated_policies')
@@ -179,23 +183,26 @@ class DispatcherTest(TestCase):
         find_policies.return_value = [self.policy.id]
         self.policy.effective_date = datetime.now()
         self.policy.save()
+        with patch('policy_notification.notification_eligibility_validators.'
+                   'notification_eligibility_validation.PolicyNotificationConfig.eligible_notification_types',
+                   new_callable=PropertyMock, return_value={'starting_of_policy': True}):
+            with patch.object(TextNotificationProvider, 'send_notification',
+                              return_value=NotificationSendingResult('out', success=True)) as mock_sent:
+                provider = TextNotificationProvider()
 
-        with patch.object(TextNotificationProvider, 'send_notification', return_value=None) as mock_sent:
-            provider = TextNotificationProvider()
+                dispatcher = NotificationDispatcher(provider, self.TEST_TEMPLATES(), self.TEST_TRIGGER_DETECTOR())
+                dispatcher.send_notification_new_active_policies()
 
-            dispatcher = NotificationDispatcher(provider, self.TEST_TEMPLATES(), self.TEST_TRIGGER_DETECTOR())
-            dispatcher.send_notification_new_active_policies()
+                self.assertEqual(
+                    self.policy.indication_of_notifications.activation_of_policy,
+                    PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE
+                )
 
-            self.assertEqual(
-                self.policy.indication_of_notifications.activation_of_policy,
-                PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE
-            )
+                self.policy.refresh_from_db()
+                detail = self.policy.indication_of_notifications.details.get(notification_type='activation_of_policy')
 
-            self.policy.refresh_from_db()
-            detail = self.policy.indication_of_notifications.details.get(notification_type='activation_of_policy')
-
-            self.assertEqual(
-                detail.status, IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_PASSED_VALIDATION
-            )
-            self.assertEqual(detail.details, 'Activation on effective day.')
-            mock_sent.assert_not_called()
+                self.assertEqual(
+                    detail.status, IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_PASSED_VALIDATION
+                )
+                self.assertEqual(detail.details, 'Activation on effective day.')
+                mock_sent.assert_not_called()

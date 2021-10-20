@@ -3,6 +3,9 @@ from datetime import datetime
 from typing import Type
 
 from django.core.exceptions import ObjectDoesNotExist
+
+from policy.values import policy_values
+from .apps import PolicyNotificationConfig
 from .models import IndicationOfPolicyNotifications, IndicationOfPolicyNotificationsDetails
 from .notification_eligibility_validators import PolicyNotificationEligibilityValidation
 from .notification_gateways.abstract_sms_gateway import NotificationGatewayAbs
@@ -74,7 +77,8 @@ class NotificationDispatcher:
             'EffectiveDate': policy.effective_date,
             'ExpiryDate': policy.expiry_date,
             'ProductCode': policy.product.code,
-            'ProductName': policy.product.name
+            'ProductName': policy.product.name,
+            'AmountToBePaid': policy_values(policy, policy.family, policy)[0].value
         }
         return customs
 
@@ -114,11 +118,14 @@ class NotificationDispatcher:
             if result:
                 setattr(indication, type_of_notification, datetime.now())
                 indication.save()
-
-        self._create_indication_details(indication, type_of_notification, result)
+            else:
+                setattr(indication, type_of_notification,
+                        PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE)
+                indication.save()
+            self._create_indication_details(indication, type_of_notification, result)
 
     def _create_indication_details(self, indication, type_of_notification, result):
-        indication = IndicationOfPolicyNotificationsDetails(**{
+        indication_details = IndicationOfPolicyNotificationsDetails(**{
             'indication_of_notification': indication,
             'notification_type': type_of_notification,
             'status':
@@ -126,4 +133,4 @@ class NotificationDispatcher:
                 else IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_DUE_TO_ERROR,
             'details': None if bool(result) or result is None else result.output
         })
-        indication.save()
+        indication_details.save()

@@ -3,10 +3,9 @@ import logging
 from datetime import date
 
 from django.db import migrations
-from insuree.models import Family
 from policy.models import Policy
 
-from policy_notification.models import FamilyNotification, IndicationOfPolicyNotifications
+from policy_notification.models import IndicationOfPolicyNotifications
 from policy_notification.utils import get_default_notification_data
 
 logger = logging.getLogger(__name__)
