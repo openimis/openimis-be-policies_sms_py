@@ -52,4 +52,3 @@ def send_notification_messages():
         import traceback
         traceback.print_exc("send_notification_messages_error.txt")
         logger.log(F"Failed to execute notification sending, error: {e}")
-

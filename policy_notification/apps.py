@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.apps import AppConfig
 import logging
 
@@ -41,6 +43,10 @@ logger = logging.getLogger(__name__)
 
 class PolicyNotificationConfig(AppConfig):
     __SCHEDULED_TASK_NAME = 'policy_notification.tasks.send_notification_messages'
+
+    # Used to flag unsuccessful notification attempts in IndicationOfPolicyNotifications
+    UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE = datetime.min
+
     name = MODULE_NAME
 
     providers = {}
