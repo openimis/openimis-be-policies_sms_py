@@ -12,21 +12,12 @@ logger = logging.getLogger(__name__)
 
 defaults = get_default_notification_data()
 
-
-def __create_existing_policies_indications(policy):
-    indication = IndicationOfPolicyNotifications(
-        activation_of_policy=date.min,
-        renewal_of_policy=date.min,
-        policy=policy,
-    )
-    return indication
-
-
-def add_defaults_family_notification_approval(apps, schema_editor):
-    policies = Policy.objects.filter(validity_to=None).iterator()
-    IndicationOfPolicyNotifications.objects.bulk_create(
-        (__create_existing_policies_indications(policy) for policy in policies)
-    )
+MIGRATION_SQL = """
+insert into 
+tblIndicationOfPolicyNotifications(PolicyId, ValidityFrom, NotificationOnActivationSent, NotificationOnRenewalSent)    
+select PolicyID, GETDATE(), '0001-01-01 00:00:00.000', '0001-01-01 00:00:00.000'  from tblPolicy 
+where ValidityTo is null and PolicyID not in (select PolicyID from tblIndicationOfPolicyNotifications)
+"""
 
 
 class Migration(migrations.Migration):
@@ -36,6 +27,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_defaults_family_notification_approval, reverse_code=migrations.RunPython.noop)
+        migrations.RunSQL(MIGRATION_SQL)
     ]
 
