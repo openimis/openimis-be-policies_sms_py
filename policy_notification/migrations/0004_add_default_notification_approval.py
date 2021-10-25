@@ -11,21 +11,15 @@ logger = logging.getLogger(__name__)
 
 defaults = get_default_notification_data()
 
+default_approval = defaults['approvalOfNotification']
+default_language = defaults['languageOfNotification']
 
-def __create_family_approval(family):
-    new_approval = FamilyNotification(
-        approval_of_notification=defaults['approvalOfNotification'],
-        language_of_notification=defaults['languageOfNotification'],
-        family=family
-    )
-    return new_approval
-
-
-def add_defaults_family_notification_approval(apps, schema_editor):
-    families = Family.objects.filter(validity_to=None, family_notification__isnull=True).iterator()
-    FamilyNotification.objects.bulk_create(
-        (__create_family_approval(family) for family in families)
-    )
+MIGRATION_SQL = f"""
+insert into 
+tblFamilySMS(FamilyID, ValidityFrom, ApprovalOfSMS, LanguageOfSMS)    
+select FamilyId, GETDATE(), 0, '{default_language}' from tblFamilies 
+where ValidityTo is null and FamilyID not in (select FamilyID from tblFamilySMS)
+"""
 
 
 class Migration(migrations.Migration):
@@ -35,6 +29,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_defaults_family_notification_approval, reverse_code=migrations.RunPython.noop)
+        migrations.RunSQL(MIGRATION_SQL)
     ]
 
