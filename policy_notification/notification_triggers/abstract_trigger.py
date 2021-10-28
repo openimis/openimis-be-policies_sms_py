@@ -7,7 +7,7 @@ from policy.models import Policy, PolicyRenewal
 class NotificationTriggerAbs(ABC):
 
     @classmethod
-    def find_newly_activated_policies(cls) -> List[type(Policy.id)]:
+    def find_activated_policies(cls) -> List[type(Policy.id)]:
         raise NotImplementedError("find_new_activated_policies not implemented")
 
     @classmethod
@@ -15,7 +15,7 @@ class NotificationTriggerAbs(ABC):
         raise NotImplementedError("find_new_effective_policies not implemented")
 
     @classmethod
-    def find_newly_renewed_policies(cls) -> List[type(Policy.id)]:
+    def find_renewed_policies(cls) -> List[type(Policy.id)]:
         raise NotImplementedError("find_newly_renewed_policies not implemented")
 
     @classmethod

@@ -30,11 +30,12 @@ jobs:
           python-version: 3.8
       - name: install linux packages
         run: |
-          wget https://raw.githubusercontent.com/openimis/database_ms_sqlserver/main/Empty%20databases/openIMIS_ONLINE.sql -O openIMIS_ONLINE.sql
-          wget https://raw.githubusercontent.com/openimis/database_ms_sqlserver/main/Demo%20database/openIMIS_demo_ONLINE.sql -O openIMIS_demo_ONLINE.sql
+          wget https://raw.githubusercontent.com/openimis/database_ms_sqlserver/develop/Empty%20databases/openIMIS_ONLINE.sql -O openIMIS_ONLINE.sql
+          wget https://raw.githubusercontent.com/openimis/database_ms_sqlserver/develop/Demo%20database/openIMIS_demo_ONLINE.sql -O openIMIS_demo_ONLINE.sql
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
           curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
           sudo apt-get update
+          sudo apt-get install gettext
           sudo ACCEPT_EULA=Y apt-get install -y  mssql-tools build-essential dialog apt-utils unixodbc-dev -y
           python -m pip install --upgrade pip
       - name: pull openimis backend
@@ -84,6 +85,8 @@ jobs:
           python -V
           ls -l
           python manage.py migrate
+          django-admin compilemessages
+
           python init_test_db.py | grep . | uniq -c
           python manage.py test --keepdb $MODULE_NAME
         env:

@@ -5,6 +5,7 @@ from policy.models import Policy, PolicyRenewal
 from itertools import groupby, chain
 from collections import ChainMap
 from policy_notification.apps import PolicyNotificationConfig
+from policy_notification.models import IndicationOfPolicyNotificationsDetails
 
 from policy_notification.notification_triggers.abstract_trigger import NotificationTriggerAbs
 
@@ -18,30 +19,13 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
     REMINDER_AFTER_EXPIRY_DAYS = PolicyNotificationConfig.reminder_after_expiry_days
 
     @classmethod
-    def find_newly_activated_policies(cls):
-        now = datetime.now()
-        if cls.first_call_in_day() and cls.TIME_INTERVAL_HOURS < 24:
-            # Include also events occurring after last call of the day if multiple daily task executions
-            delta = (24-cls.LAST_CALL_HOUR)+cls.TIME_INTERVAL_HOURS
-        else:
-            delta = cls.TIME_INTERVAL_HOURS
-
-        policies_from = now - timedelta(hours=delta)
-        active_in_period = NotificationTriggerEventDetectors.policies_activated_from(policies_from)
-        return active_in_period
+    def find_activated_policies(cls):
+        # active_in_period = NotificationTriggerEventDetectors.policies_activated_from(policies_from)
+        return NotificationTriggerEventDetectors.all_activated_policies()
 
     @classmethod
-    def find_newly_renewed_policies(cls):
-        now = datetime.now()
-        if cls.first_call_in_day() and cls.TIME_INTERVAL_HOURS < 24:
-            # Include also events occurring after last call of the day if multiple daily task executions
-            delta = (24-cls.LAST_CALL_HOUR)+cls.TIME_INTERVAL_HOURS
-        else:
-            delta = cls.TIME_INTERVAL_HOURS
-
-        policies_from = now - timedelta(hours=delta)
-        active_in_period = NotificationTriggerEventDetectors.policies_renewed_from(policies_from)
-        return active_in_period
+    def find_renewed_policies(cls):
+        return NotificationTriggerEventDetectors.all_renewed_policies()
 
     @classmethod
     def find_newly_effective_policies(cls):
@@ -85,10 +69,23 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
     def policies_activated_from(cls, from_time):
         active_and_alternated = NotificationTriggerEventDetectors\
             .__get_all_policies_after(from_time)\
+            .filter(status=Policy.STATUS_ACTIVE)\
             .filter(~Q(stage=Policy.STAGE_RENEWED))
 
         # Id of last policy before time period
         return NotificationTriggerEventDetectors.__filter_activated_after_time(active_and_alternated, from_time)
+
+    @classmethod
+    def all_activated_policies(cls):
+        active_and_alternated = NotificationTriggerEventDetectors\
+            .__get_all_active()
+        return NotificationTriggerEventDetectors.__filter_not_sent(active_and_alternated)
+
+    @classmethod
+    def all_renewed_policies(cls):
+        active_and_alternated = NotificationTriggerEventDetectors\
+            .__get_all_renewed()
+        return NotificationTriggerEventDetectors.__filter_not_sent(active_and_alternated)
 
     @classmethod
     def policies_renewed_from(cls, from_time):
@@ -118,6 +115,25 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
                 ).values_list('id', flat=True)
 
     @classmethod
+    def __filter_not_sent(cls, p):
+        active_and_alternated = p\
+            .filter(
+                Q(indication_of_notifications__isnull=True)  # Not sent
+                | Q(indication_of_notifications__activation_of_policy__isnull=True)  # Not sent
+                | (  # Sent but failed
+                    Q(indication_of_notifications__activation_of_policy=
+                      PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE) &
+                    Q(indication_of_notifications__details__notification_type="activation_of_policy",
+                      indication_of_notifications__details__status=
+                      IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_DUE_TO_ERROR)
+                )
+            ).annotate(altered_column=F('id'))
+
+        # Id of last policy before time period
+        return NotificationTriggerEventDetectors\
+            .__filter_activated_after_time(active_and_alternated,
+                                           PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE)
+    @classmethod
     def __did_value_changed(cls, v):
         # V is iterator with single element containing information about current status and status in first
         # legacy record before given period
@@ -140,6 +156,16 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
         return Policy.objects\
             .filter(validity_from__gte=date_from, validity_to__isnull=True)\
             .annotate(altered_column=F('id'))
+
+    @staticmethod
+    def __get_all_active():
+        return Policy.objects.filter(validity_to__isnull=True, status=Policy.STATUS_ACTIVE)\
+            .filter(~Q(stage=Policy.STAGE_RENEWED))
+
+    @staticmethod
+    def __get_all_renewed():
+        return Policy.objects.filter(validity_to__isnull=True, status=Policy.STATUS_ACTIVE)\
+            .filter(Q(stage=Policy.STAGE_RENEWED))
 
     @staticmethod
     def __get_latest_historical_policies_before(date_before, currently_valid_policies):

@@ -1,0 +1,3 @@
+from policy_notification.notification_eligibility_validators.abstract_validator import AbstractEligibilityValidator
+from policy_notification.notification_eligibility_validators.notification_eligibility_validation \
+    import PolicyNotificationEligibilityValidation

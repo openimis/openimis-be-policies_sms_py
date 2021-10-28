@@ -11,11 +11,12 @@ from policy_notification.reports.communication_by_notification.report_builder im
     CommunicationByNotificationReportBuilder
 from policy_notification.services import *
 from insuree.models import InsureePolicy
+from django.utils.translation import gettext as _
 
 
 class TestFamilyNotificationReportServices(TestCase):
     TEST_MODE = 1
-    TEST_MODE_REPR = 'Approval and phone number'
+    TEST_MODE_REPR = _('policy_notification.Mode.1')
 
     def setUp(self):
         self.factory = RequestFactory()
