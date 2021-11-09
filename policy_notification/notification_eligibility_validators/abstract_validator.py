@@ -1,9 +1,7 @@
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TypeVar, Callable, Union
-from django.db.models import Count, Value, IntegerField, CharField, Func, F, ExpressionWrapper, F
-from django.db.models.functions import Cast
-from django.db.models import Case, When
+from policy_notification.notification_eligibility_validators.dataclasses import IneligibleObject
 
 
 class AbstractEligibilityValidator(ABC):
@@ -40,16 +38,16 @@ class AbstractEligibilityValidator(ABC):
         """
         self.notification_collection = notification_collection
         self.type_of_notification = type_of_notification
-        self._eligible_collection = self._DEFAULT_COLLECTION
-        self._ineligible_collection = self._DEFAULT_COLLECTION
+        self._eligible_collection = self._DEFAULT_COLLECTION.copy()
+        self._ineligible_collection = self._DEFAULT_COLLECTION.copy()
 
     def validate_notification_eligibility(self):
         """
         For given collection return objects that passed validation.
         If notification for given type was not implemented then return whole collection.
         """
-        self._eligible_collection = self._DEFAULT_COLLECTION
-        self._ineligible_collection = self._DEFAULT_COLLECTION
+        self._eligible_collection = self._DEFAULT_COLLECTION.copy()
+        self._ineligible_collection = self._DEFAULT_COLLECTION.copy()
         notification_collection, type_of_notification = self.notification_collection, self.type_of_notification
         base_validated = self.__base_validation(notification_collection, type_of_notification)
         validated = self.__notification_type_validation(base_validated, type_of_notification)
@@ -128,8 +126,6 @@ class QuerysetEligibilityValidationMixin:
     BASE_VALIDATION_REJECTION_REASON = None
     TYPE_VALIDATION_REJECTION_REASON = None
     TYPE_VALIDATION_REJECTION_DETAILS = None
-    reasons = defaultdict(lambda: [])  # {obj_id: reason}
-    details = defaultdict(lambda: [])  # {obj_id: details}
 
     @property
     def invalid_collection(self):
@@ -139,28 +135,16 @@ class QuerysetEligibilityValidationMixin:
                 "accessing invalid_collection."
             )
         else:
-            reasons_annotation = Case(
-                *[When(id__in=ids, then=reason) for reason, ids in self.reasons.items()],
-                default=0,
-                output_field=IntegerField()
-            )
-            details_annotation = Case(
-                *[When(id__in=ids, then=Value(detail, CharField())) for detail, ids in self.details.items()],
-                default=Value('', CharField()),
-                output_field=CharField()
-            )
-
-            self._ineligible_collection = self._ineligible_collection\
-                .annotate(rejection_reason=reasons_annotation)\
-                .annotate(rejection_details=details_annotation)
-
-            self._assert_invalid_collection()
             return self._ineligible_collection
 
     def _add_non_eligible(self, collection, reason, detail=None):
-        self.reasons[reason].extend(collection.values_list('id', flat=True))
-        self.details[detail].extend(collection.values_list('id', flat=True))
-        self._ineligible_collection = self._ineligible_collection | collection
+        futures = []
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            for element in collection.iterator():
+                futures.append(executor.submit(self.__create_ineligible, element, reason, detail))
+
+            completed = as_completed(futures)
+            self._ineligible_collection.extend([f.result() for f in completed])
 
     def _add_non_eligible_due_to_base_validation(self, not_valid):
         self._add_non_eligible(not_valid, self.BASE_VALIDATION_REJECTION_REASON)
@@ -169,9 +153,12 @@ class QuerysetEligibilityValidationMixin:
         self._add_non_eligible(not_valid, self.TYPE_VALIDATION_REJECTION_REASON, self.TYPE_VALIDATION_REJECTION_DETAILS)
 
     def _substract_collections(self, collection_from, collection):
-        return collection_from.exclude(id__in=collection.values('id'))
+        return collection_from.exclude(id__in=collection.values('id')).all()
 
     def _assert_invalid_collection(self):
         rejections = self._ineligible_collection.count()
         entries = self._ineligible_collection.count()
         assert rejections == entries, "Collection of invalid records has to assign rejection reason for every entry in collection"
+
+    def __create_ineligible(self, ineligible, reason, detail):
+        return IneligibleObject(policy=ineligible, reason=reason, details=detail)

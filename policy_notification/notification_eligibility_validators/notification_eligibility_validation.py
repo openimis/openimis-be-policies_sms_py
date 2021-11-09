@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Callable, Union
+from typing import Callable, Union, Type
 
 from policy.models import Policy
 from policy_notification.apps import PolicyNotificationConfig
@@ -19,15 +19,16 @@ class PolicyNotificationEligibilityValidation(QuerysetEligibilityValidationMixin
     NOTIFICATION_NOT_IN_INDICATION_TABLE = "Notification of type {notification} doesn't have representation " \
                                            "in IndicationOfPolicyNotifications table."
 
-    NON_ELIGIBLE_HANDLER: NotEligibleNotificationHandler = NotEligibleNotificationHandler()
-    _DEFAULT_COLLECTION = Policy.objects.none()
+    NON_ELIGIBLE_HANDLER: Type[NotEligibleNotificationHandler] = NotEligibleNotificationHandler
 
-    NotificationCollection = 'QuerySet[Policy]' # Typing
+    NotificationCollection = 'QuerySet[Policy]'  # Typing
 
     BASE_VALIDATION_REJECTION_REASON = \
         IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_NO_PERMISSION_FOR_NOTIFICATIONS
+
     TYPE_VALIDATION_REJECTION_REASON = \
         IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_PASSED_VALIDATION
+
     TYPE_VALIDATION_REJECTION_DETAILS = 'Activation on effective day.'
 
     def _get_validation_for_notification_type(self, notification_type: str):
@@ -39,8 +40,8 @@ class PolicyNotificationEligibilityValidation(QuerysetEligibilityValidationMixin
         return self.__base_eligibility(notification_collection, type_of_notification)
 
     def _handle_not_valid_entries(self):
-        self.NON_ELIGIBLE_HANDLER\
-            .save_information_about_not_eligible_policies(self.invalid_collection, self.type_of_notification)
+        handler = self.NON_ELIGIBLE_HANDLER(self.type_of_notification)
+        handler.save_information_about_not_eligible_policies(self.invalid_collection)
 
     def __base_eligibility(self, notification_collection, type_of_notification):
         valid_policies = notification_collection.filter(family__family_notification__approval_of_notification=True)
