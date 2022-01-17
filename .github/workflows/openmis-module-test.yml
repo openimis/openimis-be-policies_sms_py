@@ -30,12 +30,11 @@ jobs:
           python-version: 3.8
       - name: install linux packages
         run: |
-          wget https://raw.githubusercontent.com/openimis/database_ms_sqlserver/develop/Empty%20databases/openIMIS_ONLINE.sql -O openIMIS_ONLINE.sql
-          wget https://raw.githubusercontent.com/openimis/database_ms_sqlserver/develop/Demo%20database/openIMIS_demo_ONLINE.sql -O openIMIS_demo_ONLINE.sql
+          git clone --depth 1 --branch develop https://github.com/openimis/database_ms_sqlserver.git  ./sql
+          cd sql/ && bash concatenate_files.sh && cd ..
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
           curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
           sudo apt-get update
-          sudo apt-get install gettext
           sudo ACCEPT_EULA=Y apt-get install -y  mssql-tools build-essential dialog apt-utils unixodbc-dev -y
           python -m pip install --upgrade pip
       - name: pull openimis backend
@@ -68,8 +67,7 @@ jobs:
         run: |
           /opt/mssql-tools/bin/sqlcmd -S localhost,1433 -U SA -P $SA_PASSWORD -Q 'DROP DATABASE IF EXISTS imis'
           /opt/mssql-tools/bin/sqlcmd -S localhost,1433 -U SA -P $SA_PASSWORD -Q 'CREATE DATABASE imis'
-          /opt/mssql-tools/bin/sqlcmd -S localhost,1433 -U SA -P $SA_PASSWORD -d imis -i openIMIS_ONLINE.sql | grep . | uniq -c
-          /opt/mssql-tools/bin/sqlcmd -S localhost,1433 -U SA -P $SA_PASSWORD -d imis -i openIMIS_demo_ONLINE.sql | grep . | uniq -c
+          /opt/mssql-tools/bin/sqlcmd -S localhost,1433 -U SA -P $SA_PASSWORD -d imis -i sql/output/fullDemoDatabase.sql | grep . | uniq -c
         env:
           SA_PASSWORD: GitHub999
           ACCEPT_EULA: Y
@@ -85,7 +83,6 @@ jobs:
           python -V
           ls -l
           python manage.py migrate
-          django-admin compilemessages
           python init_test_db.py | grep . | uniq -c
           python manage.py test --keepdb $MODULE_NAME
         env:
