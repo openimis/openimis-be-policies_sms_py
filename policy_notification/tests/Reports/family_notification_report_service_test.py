@@ -136,7 +136,7 @@ class TestFamilyNotificationReportServices(TestCase):
 
     def create_policy(self):
         self.test_product = create_test_product("PROD1111", custom_props={
-            "member_count": 5,
+            "max_member": 5,
             "administration_period": 0,
             "lump_sum": 0,
             "premium_adult": 300,
