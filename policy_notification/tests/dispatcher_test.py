@@ -37,7 +37,7 @@ class DispatcherTest(TestCase):
     def create_policy(self):
         self.test_insuree = create_test_insuree(with_family=True, custom_props={"phone": 123123123})
         self.test_product = create_test_product("PROD1111", custom_props={
-            "member_count": 5,
+            "max_members": 5,
             "administration_period": 0,
             "lump_sum": 0,
             "premium_adult": 300,
