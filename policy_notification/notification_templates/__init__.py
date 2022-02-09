@@ -1,0 +1,1 @@
+from policy_notification.notification_templates.DefaultNotificationTemplates import DefaultNotificationTemplates
