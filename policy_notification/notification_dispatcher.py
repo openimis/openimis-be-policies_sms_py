@@ -1,8 +1,10 @@
 import logging
 from datetime import datetime
+from itertools import islice
 from typing import Type
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Prefetch
 
 from policy.values import policy_values
 from .apps import PolicyNotificationConfig
@@ -83,15 +85,16 @@ class NotificationDispatcher:
         return customs
 
     def _send_notification_for_eligible_policies(self, policies, notification_template, type_of_notification):
-        notification_eligible_policies = self._get_eligible_policies(policies, type_of_notification)
         notification_sent_successfully = []
-        for policy in notification_eligible_policies:
-            result = self._send_notification(policy, notification_template)
-            if result:
-                notification_sent_successfully.append(policy)
+        for policies_chunk in self.__chunk_list(policies):
+            notification_eligible_policies = self._get_eligible_policies(policies_chunk, type_of_notification)
+            for policy in notification_eligible_policies:
+                result = self._send_notification(policy, notification_template)
+                if result:
+                    notification_sent_successfully.append(policy)
 
-            indication = self._get_or_create_policy_indication(policy)
-            self._update_indication(indication, type_of_notification, result)
+                indication = self._get_or_create_policy_indication(policy)
+                self._update_indication(indication, type_of_notification, result)
 
         return notification_sent_successfully
 
@@ -134,3 +137,7 @@ class NotificationDispatcher:
             'details': None if bool(result) or result is None else result.output
         })
         indication_details.save()
+
+    def __chunk_list(self, l, size=1000):
+        return (l[index:index + size] for index in range(0, len(l), size))
+

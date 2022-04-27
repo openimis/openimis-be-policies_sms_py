@@ -50,5 +50,5 @@ def send_notification_messages():
                 dispatcher.send_notification_new_renewed_policies()
     except Exception as e:
         import traceback
-        traceback.print_exc("send_notification_messages_error.txt")
-        logger.log(F"Failed to execute notification sending, error: {e}")
+        traceback.print_exc()
+        logger.error(F"Failed to execute notification sending, error: {traceback.format_exc()}")

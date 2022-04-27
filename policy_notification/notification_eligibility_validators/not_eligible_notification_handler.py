@@ -14,6 +14,7 @@ class NotEligibleNotificationHandler:
         self.type_of_notification = type_of_notification
 
     def save_information_about_not_eligible_policies(self, ineligible: Iterable[IneligibleObject]):
+        self.__assert_details_list(ineligible)
         new_ineligible = self._filter_out_sent_notifications(ineligible)
         self._ensure_indication_exits(new_ineligible)
         self._create_or_override_indication_details(new_ineligible)
@@ -40,28 +41,23 @@ class NotEligibleNotificationHandler:
         for_update = []
         for ineligible_policy in ineligible:
             details = self.__get_indication_details(ineligible_policy.policy)
-            update = ineligible_policy.to_indication_details(self.type_of_notification)
-            details.status = update.status
-            details.details = update.details or ''  # MSSQL Backend doesn't allow None update
+            details.status = ineligible_policy.reason
+            details.details = ineligible_policy.details or ''  # MSSQL Backend doesn't allow None update
             for_update.append(details)
         IndicationOfPolicyNotificationsDetails.objects.bulk_update(for_update, ['status', 'details'])
 
     def __get_indication_details(self, policy):
-        return policy \
-            .indication_of_notifications \
-            .details. \
-            get(validity_to=None, notification_type=self.type_of_notification)
+        details_list = policy.indication_of_notifications.details_list
+        return next((x for x in details_list if x.notification_type == self.type_of_notification), None)
 
     def _ensure_indication_exits(self, ineligible: Iterable[IneligibleObject]):
         # Create indication for entries without ones
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            futures = [
-                executor.submit(self.__create_failed_indication, ineligible_policy.policy)
-                for ineligible_policy in ineligible
-                if not hasattr(ineligible_policy.policy, 'indication_of_notifications')
-            ]
-            wait(futures)
-            IndicationOfPolicyNotifications.objects.bulk_create(chain(f.result() for f in futures))
+        out = [
+            self.__create_failed_indication(ineligible_policy.policy)
+            for ineligible_policy in ineligible
+            if not hasattr(ineligible_policy.policy, 'indication_of_notifications')
+        ]
+        IndicationOfPolicyNotifications.objects.bulk_create(out)
 
     def __create_failed_indication(self, policy):
         return IndicationOfPolicyNotifications(**{
@@ -80,10 +76,22 @@ class NotEligibleNotificationHandler:
 
     def _split_ineligible_by_details(self, ineligible):
         def __indication_exists(policy):
-            details = policy.indication_of_notifications.details
-            return details.filter(notification_type=self.type_of_notification).exists()
+            if not hasattr(policy.indication_of_notifications, 'details_list'):
+                # Prefetch to_attr doesn't have default value, it's required to check if it's existing
+                return False
+            existing_details = [x.notification_type for x in policy.indication_of_notifications.details_list]
+            return self.type_of_notification in existing_details
 
         with_, without = [], []
         for next_ in ineligible:
             with_.append(next_) if __indication_exists(next_.policy) else without.append(next_)
         return with_, without
+
+    def __assert_details_list(self, ineligible: Iterable[IneligibleObject]):
+        # details_list was introduced to improve efficiency
+        assert all([
+            (not hasattr(next_.policy, 'indication_of_notifications') or
+                hasattr(next_.policy.indication_of_notifications, 'details_list'))
+            for next_ in ineligible
+        ]), "Policy indication of policy notification has to provide 'details_list' attribute whose value " \
+            "is the same as the .details related manager"

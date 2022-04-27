@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TypeVar, Callable, Union
+
+from django.db.models import Prefetch
+
+from policy_notification.models import IndicationOfPolicyNotifications, IndicationOfPolicyNotificationsDetails
 from policy_notification.notification_eligibility_validators.dataclasses import IneligibleObject
 
 
@@ -93,7 +97,7 @@ class AbstractEligibilityValidator(ABC):
         raise NotImplementedError("Hast to be implemented")
 
     def _assert_invalid_collection(self):
-        raise NotImplementedError()
+        pass
 
     def _add_non_eligible_due_to_base_validation(self, not_valid):
         raise NotImplementedError()
@@ -127,25 +131,6 @@ class QuerysetEligibilityValidationMixin:
     TYPE_VALIDATION_REJECTION_REASON = None
     TYPE_VALIDATION_REJECTION_DETAILS = None
 
-    @property
-    def invalid_collection(self):
-        if self._ineligible_collection is None:
-            raise ValueError(
-                "Collection was not yet validated. Call validate_notification_eligibility before "
-                "accessing invalid_collection."
-            )
-        else:
-            return self._ineligible_collection
-
-    def _add_non_eligible(self, collection, reason, detail=None):
-        futures = []
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            for element in collection.iterator():
-                futures.append(executor.submit(self.__create_ineligible, element, reason, detail))
-
-            completed = as_completed(futures)
-            self._ineligible_collection.extend([f.result() for f in completed])
-
     def _add_non_eligible_due_to_base_validation(self, not_valid):
         self._add_non_eligible(not_valid, self.BASE_VALIDATION_REJECTION_REASON)
 
@@ -153,12 +138,17 @@ class QuerysetEligibilityValidationMixin:
         self._add_non_eligible(not_valid, self.TYPE_VALIDATION_REJECTION_REASON, self.TYPE_VALIDATION_REJECTION_DETAILS)
 
     def _substract_collections(self, collection_from, collection):
-        return collection_from.exclude(id__in=collection.values('id')).all()
+        x = collection.values('id')
+        return collection_from.exclude(id__in=x).all()
 
-    def _assert_invalid_collection(self):
-        rejections = self._ineligible_collection.count()
-        entries = self._ineligible_collection.count()
-        assert rejections == entries, "Collection of invalid records has to assign rejection reason for every entry in collection"
+    def _add_non_eligible(self, collection, reason, detail=None):
+        futures = []
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            for element in collection:
+                futures.append(executor.submit(self.__create_ineligible, element, reason, detail))
+
+            completed = as_completed(futures)
+            self._ineligible_collection.extend([f.result() for f in completed])
 
     def __create_ineligible(self, ineligible, reason, detail):
         return IneligibleObject(policy=ineligible, reason=reason, details=detail)
