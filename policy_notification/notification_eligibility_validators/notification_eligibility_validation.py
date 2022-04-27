@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 from typing import Callable, Union, Type
 
+from django.db.models import Prefetch
+from django_mysql.models import QuerySet
 from policy.models import Policy
 from policy_notification.apps import PolicyNotificationConfig
 from policy_notification.models import IndicationOfPolicyNotifications, IndicationOfPolicyNotificationsDetails
@@ -30,6 +32,10 @@ class PolicyNotificationEligibilityValidation(QuerysetEligibilityValidationMixin
         IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_PASSED_VALIDATION
 
     TYPE_VALIDATION_REJECTION_DETAILS = 'Activation on effective day.'
+
+    def __init__(self, notification_collection: NotificationCollection, type_of_notification: str):
+        notification_collection = self._prefetch_details_list(notification_collection)
+        super().__init__(notification_collection, type_of_notification)
 
     def _get_validation_for_notification_type(self, notification_type: str):
         if notification_type == 'activation_of_policy':
@@ -88,3 +94,11 @@ class PolicyNotificationEligibilityValidation(QuerysetEligibilityValidationMixin
         # should be sent.
         today = datetime.now().date()
         return policies_collection.filter(~Q(effective_date=today))
+
+    def _prefetch_details_list(self, notification_collection):
+        return notification_collection.select_related('indication_of_notifications') \
+            .prefetch_related(Prefetch(
+            'indication_of_notifications__details',
+            queryset=IndicationOfPolicyNotificationsDetails.objects.filter(validity_to__isnull=True),
+            to_attr='details_list'
+        )).all()
