@@ -19,6 +19,14 @@ class TestActivePolicyTrigger(BaseTriggerTestCase):
         self.assertEqual(altered_policies[0], self.policy.id)
 
     @patch('policy_notification.notification_triggers.notification_triggers.datetime')
+    def test_find_activated_policies_old(self, mocked_dt):
+        mocked_dt.now.return_value = datetime(2021, 6, 2)
+        self.policy.validity_from = datetime(2021, 5, 2)
+        altered_policies = self.TEST_TRIGGER_DETECTOR.find_activated_policies()
+        self.assertEqual(len(altered_policies), 1)
+        self.assertEqual(altered_policies[0], self.policy.id)
+
+    @patch('policy_notification.notification_triggers.notification_triggers.datetime')
     def test_find_activated_policies_recently_changed(self, mocked_dt):
         mocked_dt.now.return_value = datetime(2021, 6, 2)
         self._create_policy_history()

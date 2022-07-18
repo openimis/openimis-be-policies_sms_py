@@ -35,7 +35,9 @@ DEFAULT_CONFIG = {
     "trigger_first_call_hour": 8,
     "trigger_last_call_hour": 20,
     "reminder_before_expiry_days": 14,
-    "reminder_after_expiry_days": 5
+    "reminder_after_expiry_days": 5,
+    "policy_activation_relevance_maximum_days_timedelta": 5,
+    "policy_renewal_relevance_maximum_days_timedelta": 5,
 }
 
 logger = logging.getLogger(__name__)
@@ -57,6 +59,8 @@ class PolicyNotificationConfig(AppConfig):
     trigger_last_call_hour = None
     reminder_before_expiry_days = None
     reminder_after_expiry_days = None
+    policy_activation_relevance_maximum_days_timedelta = None
+    policy_renewal_relevance_maximum_days_timedelta = None
 
     def _configure_perms(self, cfg):
         PolicyNotificationConfig.providers = cfg["providers"]
@@ -66,6 +70,10 @@ class PolicyNotificationConfig(AppConfig):
         self.__load_trigger_scheduled_config(cfg)
         PolicyNotificationConfig.reminder_before_expiry_days = cfg['reminder_before_expiry_days']
         PolicyNotificationConfig.reminder_after_expiry_days = cfg['reminder_after_expiry_days']
+        PolicyNotificationConfig.policy_activation_relevance_maximum_days_timedelta =\
+            cfg['policy_activation_relevance_maximum_days_timedelta']
+        PolicyNotificationConfig.policy_renewal_relevance_maximum_days_timedelta = \
+            cfg['policy_renewal_relevance_maximum_days_timedelta']
 
     def ready(self):
         from core.models import ModuleConfiguration
