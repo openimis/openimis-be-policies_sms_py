@@ -1,3 +1,4 @@
+import datetime
 from datetime import timedelta, date
 from unittest.mock import patch, PropertyMock
 
@@ -72,7 +73,9 @@ class DispatcherTest(TestCase):
         }
 
     @patch('policy_notification.notification_triggers.NotificationTriggerEventDetectors.find_activated_policies')
-    def test_send_notification_for_eligible_policies(self, find_policies):
+    @patch('policy_notification.notification_eligibility_validators.notification_eligibility_validation.datetime')
+    def test_send_notification_for_eligible_policies(self, mocked_dt, find_policies):
+        mocked_dt.today.return_value = datetime(2021, 5, 30, 12)
         find_policies.return_value = [self.policy.id]
         with patch.object(TextNotificationProvider, 'send_notification',
                           return_value=NotificationSendingResult(success=True)) as mock_sent:
@@ -91,6 +94,28 @@ class DispatcherTest(TestCase):
                                 PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE)
             self.assertEqual(details_status,
                              IndicationOfPolicyNotificationsDetails.SendIndicationStatus.SENT_SUCCESSFULLY)
+
+    @patch('policy_notification.notification_triggers.NotificationTriggerEventDetectors.find_activated_policies')
+    @patch('policy_notification.notification_eligibility_validators.notification_eligibility_validation.datetime')
+    def test_not_send_notification_for_non_eligible_policies(self, mocked_dt, find_policies):
+        mocked_dt.today.return_value = datetime(2021, 6, 20, 20)
+        find_policies.return_value = [self.policy.id]
+        with patch.object(TextNotificationProvider, 'send_notification',
+                          return_value=NotificationSendingResult(success=True)) as mock_sent:
+            provider = TextNotificationProvider()
+
+            dispatcher = NotificationDispatcher(provider, self.TEST_TEMPLATES(), self.TEST_TRIGGER_DETECTOR())
+            dispatcher.send_notification_new_active_policies()
+            details_status = self.policy.indication_of_notifications.details\
+                .get(notification_type='activation_of_policy').status
+
+            mock_sent.assert_not_called()
+            self.assertIsNotNone(self.policy.indication_of_notifications.activation_of_policy)
+            self.assertEqual(self.policy.indication_of_notifications.activation_of_policy,
+                             PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE)
+            self.assertEqual(
+                details_status,
+                IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_NOTIFICATION_FOR_OBSOLETE_EVENT)
 
     @patch('policy_notification.notification_triggers.NotificationTriggerEventDetectors.find_activated_policies')
     def test_send_notification_for_eligible_policies_already_sent(self, find_policies):
@@ -135,6 +160,11 @@ class DispatcherTest(TestCase):
                 IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_NO_PERMISSION_FOR_NOTIFICATIONS
             )
 
+            self.assertEqual(
+                self.policy.indication_of_notifications.details.get(notification_type='activation_of_policy').details,
+                "Rejected due to family denied notifications."
+            )
+
             # Resend for same policy after accepting notifications should fails
             self.test_family.family_notification.approval_of_notification = True
             self.test_family.family_notification.save()
@@ -148,7 +178,10 @@ class DispatcherTest(TestCase):
             mock_sent.assert_not_called()
 
     @patch('policy_notification.notification_triggers.NotificationTriggerEventDetectors.find_activated_policies')
-    def test_send_notification_for_eligible_policies_resend_after_sending_error(self, find_policies):
+    @patch('policy_notification.notification_eligibility_validators'
+           '.notification_eligibility_validation.datetime')
+    def test_send_notification_for_eligible_policies_resend_after_sending_error(self, dt_mock, find_policies):
+        dt_mock.today.return_value = datetime(2021, 6, 1, 1)
         self.test_family.family_notification.approval_of_notification = False
         self.test_family.family_notification.save()
 
@@ -156,7 +189,6 @@ class DispatcherTest(TestCase):
         with patch.object(TextNotificationProvider, 'send_notification',
                           return_value=NotificationSendingResult(success=True)) as mock_sent:
             provider = TextNotificationProvider()
-
             dispatcher = NotificationDispatcher(provider, self.TEST_TEMPLATES(), self.TEST_TRIGGER_DETECTOR())
             dispatcher.send_notification_new_active_policies()
             # Override status
@@ -204,5 +236,7 @@ class DispatcherTest(TestCase):
                 self.assertEqual(
                     detail.status, IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_PASSED_VALIDATION
                 )
-                self.assertEqual(detail.details, 'Activation on effective day.')
+                expected_details = 'Policy is being activated on day of policy start, ' \
+                                   'only start of policy notification is sent.'
+                self.assertEqual(detail.details, expected_details)
                 mock_sent.assert_not_called()

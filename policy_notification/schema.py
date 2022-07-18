@@ -5,6 +5,7 @@ from core.schema import signal_mutation_module_after_mutating
 from insuree.models import Family, Insuree
 from insuree.signals import signal_before_family_query
 from graphene_django.filter import DjangoFilterConnectionField
+from django.db.models import Q
 
 from policy_notification.gql_queries import FamilyNotificationGQLType
 from policy_notification.services import update_family_notification_policy, create_family_notification_policy, delete_family_notification_policy
@@ -79,7 +80,6 @@ def on_family_query_filter(sender, **kwargs):
         mode = mode.get('value', 0)
         return communication_approval_filter(mode)
     return Q()
-
 
 
 def bind_signals():

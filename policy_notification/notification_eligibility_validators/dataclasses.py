@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+from typing import Callable, Any, Collection
 
 from policy.models import Policy
 from policy_notification.models import IndicationOfPolicyNotificationsDetails
 
 
-@dataclass()
+@dataclass
 class IneligibleObject:
     policy: Policy
     reason: int = 0
@@ -18,3 +19,9 @@ class IneligibleObject:
                 'details': self.details
         })
 
+
+@dataclass
+class ValidationDefinition:
+    error_type_code: int  # Should align with IndicationOfPolicyNotificationsDetails.SendIndicationStatus
+    validation_details: str
+    validation_function: Callable[[Collection, str], Collection]

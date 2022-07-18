@@ -66,3 +66,30 @@ def get_family_member_with_phone(family):
         return query.first()
     else:
         return None
+
+
+def get_notification_indication_filter(notification_type):
+    # Confirm that for given policy notification was not sent, or was sent with error
+    from policy_notification.models import IndicationOfPolicyNotificationsDetails
+
+    def __notification_not_sent_filter(type_of_notification):
+        return Q(**{f"indication_of_notifications__{type_of_notification}__isnull": True})
+
+    def __notification_failed_filter(type_of_notification):
+        return Q(**{
+            f"indication_of_notifications__{type_of_notification}":
+                PolicyNotificationConfig.UNSUCCESSFUL_NOTIFICATION_ATTEMPT_DATE
+        }) & Q(**{
+            f"indication_of_notifications__details__status":
+                IndicationOfPolicyNotificationsDetails.SendIndicationStatus.NOT_SENT_DUE_TO_ERROR,
+            f"indication_of_notifications__details__notification_type": type_of_notification
+        })
+
+    def __indication_filter(type_of_notification):
+        # Confirm that for given policy notification was not sent, or was sent with error
+        indication_not_exit = Q(indication_of_notifications__isnull=True)
+        indication_not_sent = __notification_not_sent_filter(type_of_notification)
+        indication_failed = __notification_failed_filter(type_of_notification)
+        return indication_not_exit | indication_not_sent | indication_failed
+
+    return __indication_filter(notification_type)
