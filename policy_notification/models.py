@@ -1,12 +1,9 @@
-from datetime import date
-
 from django.db import models
 from core import models as core_models
 from core.utils import get_first_or_default_language
 from insuree.models import Family
 from policy.models import Policy
 from enum import IntEnum
-from jsonfallback.fields import FallbackJSONField
 
 
 class FamilyNotification(core_models.BaseVersionedModel):
