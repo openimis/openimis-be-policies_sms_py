@@ -5,7 +5,6 @@ from unittest.mock import patch, PropertyMock
 from django.test import TestCase
 from policy.test_helpers import create_test_policy
 from insuree.test_helpers import create_test_insuree
-from insuree.models import InsureePolicy
 from product.test_helpers import create_test_product
 
 from policy.values import policy_values
@@ -24,16 +23,8 @@ class DispatcherTest(TestCase):
     TEST_TRIGGER_DETECTOR = NotificationTriggerEventDetectors
 
     def setUp(self):
+        super(DispatcherTest, self).setUp()
         self.create_policy()
-
-    def tearDown(self):
-        InsureePolicy.objects.get(policy=self.policy).delete()
-        self.policy.delete()
-        self.test_insuree.family = None
-        self.test_insuree.save()
-        self.test_family.delete()
-        self.test_insuree.delete()
-        self.test_product.delete()
 
     def create_policy(self):
         self.test_insuree = create_test_insuree(with_family=True, custom_props={"phone": 123123123})
@@ -48,19 +39,20 @@ class DispatcherTest(TestCase):
             "insurance_period": 12,
         })
         self.test_family = self.test_insuree.family
-        self.test_family.family_notification = FamilyNotification(approval_of_notification=True, language_of_notification='en')
+        self.test_family.family_notification = FamilyNotification(approval_of_notification=True,
+                                                                  language_of_notification='en')
         self.test_family.family_notification.save()
         self.test_family.save()
         self.policy = create_test_policy(
             product=self.test_product,
             insuree=self.test_insuree,
             custom_props={
-             "status": 2,
-             "validity_from": datetime(2021, 6, 1, 10),
-             "effective_date": date(2019, 1, 1),
-             "enroll_date": date(2019, 1, 1),
-             "start_date": date(2019, 1, 1),
-        })
+                "status": 2,
+                "validity_from": datetime(2021, 6, 1, 10),
+                "effective_date": date(2019, 1, 1),
+                "enroll_date": date(2019, 1, 1),
+                "start_date": date(2019, 1, 1),
+            })
 
         self.test_custom_props = {
             'InsuranceID': self.test_insuree.chf_id,
@@ -85,7 +77,7 @@ class DispatcherTest(TestCase):
             dispatcher.send_notification_new_active_policies()
 
             expected_msg = self.TEST_TEMPLATES().notification_on_activation % self.test_custom_props
-            details_status = self.policy.indication_of_notifications.details\
+            details_status = self.policy.indication_of_notifications.details \
                 .get(notification_type='activation_of_policy').status
 
             mock_sent.assert_called_once_with(expected_msg, family_number='123123123')
@@ -106,7 +98,7 @@ class DispatcherTest(TestCase):
 
             dispatcher = NotificationDispatcher(provider, self.TEST_TEMPLATES(), self.TEST_TRIGGER_DETECTOR())
             dispatcher.send_notification_new_active_policies()
-            details_status = self.policy.indication_of_notifications.details\
+            details_status = self.policy.indication_of_notifications.details \
                 .get(notification_type='activation_of_policy').status
 
             mock_sent.assert_not_called()

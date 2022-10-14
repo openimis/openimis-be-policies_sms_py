@@ -1,7 +1,5 @@
-from unittest import TestCase
-from unittest.mock import patch, MagicMock
+from django.test import TestCase
 
-import requests
 from requests import PreparedRequest
 from requests.auth import HTTPBasicAuth
 
