@@ -10,7 +10,6 @@ from policy_notification.reports import FamilyNotificationReportService, FamilyN
 from policy_notification.reports.communication_by_notification.report_builder import \
     CommunicationByNotificationReportBuilder
 from policy_notification.services import *
-from insuree.models import InsureePolicy
 from django.utils.translation import gettext as _
 
 
@@ -19,6 +18,7 @@ class TestFamilyNotificationReportServices(TestCase):
     TEST_MODE_REPR = _('policy_notification.Mode.1')
 
     def setUp(self):
+        super(TestFamilyNotificationReportServices, self).setUp()
         self.factory = RequestFactory()
         self.test_user = User(
             username='always_valid',
@@ -29,18 +29,6 @@ class TestFamilyNotificationReportServices(TestCase):
         self.create_family()
         self.create_location()
         self.create_policy()
-
-    def tearDown(self):
-        InsureePolicy.objects.get(policy=self.policy).delete()
-
-        self.test_insuree.family = None
-        self.test_insuree.save()
-
-        self.policy.delete()
-        self.test_family.delete()
-        self.test_insuree.delete()
-        self.test_product.delete()
-        self.test_officer.delete()
 
     def test_fetch_report_data_region(self):
         get_req_params = {
@@ -127,8 +115,10 @@ class TestFamilyNotificationReportServices(TestCase):
         self.assertEqual(family_list['family_head_chf'], self.test_family.head_insuree.chf_id)
         self.assertEqual(family_list['family_head_given_name'], self.test_family.head_insuree.other_names)
         self.assertEqual(family_list['family_head_last_name'], self.test_family.head_insuree.last_name)
-        self.assertEqual(bool(family_list['family_notification_approval']), self.test_family.family_notification.approval_of_notification)
-        self.assertEqual(family_list['family_notification_language'], self.test_family.family_notification.language_of_notification)
+        self.assertEqual(bool(family_list['family_notification_approval']),
+                         self.test_family.family_notification.approval_of_notification)
+        self.assertEqual(family_list['family_notification_language'],
+                         self.test_family.family_notification.language_of_notification)
         self.assertEqual(family_list['family_head_phone'], self.test_family.head_insuree.phone)
         self.assertEqual(family_list['family_alternative_given_name'], '')
         self.assertEqual(family_list['family_alternative_last_name'], '')
@@ -147,9 +137,9 @@ class TestFamilyNotificationReportServices(TestCase):
         })
 
         self.policy = create_test_policy(product=self.test_product, insuree=self.test_insuree, custom_props={
-                "status": 2,
-                "validity_from": datetime(2021, 6, 1, 10),
-                "officer": self.test_officer
+            "status": 2,
+            "validity_from": datetime(2021, 6, 1, 10),
+            "officer": self.test_officer
         })
 
     def create_family(self):
@@ -167,4 +157,3 @@ class TestFamilyNotificationReportServices(TestCase):
     def create_location(self):
         self.test_district = self.test_family.location.parent.parent
         self.test_region = self.test_district.parent
-

@@ -2,7 +2,6 @@ from datetime import timedelta
 from django.test import TestCase
 from policy.test_helpers import create_test_policy
 from insuree.test_helpers import create_test_insuree
-from insuree.models import InsureePolicy
 from policy.models import Policy
 from product.test_helpers import create_test_product
 
@@ -17,25 +16,8 @@ class BaseTriggerTestCase(TestCase):
     TEST_TRIGGER_DETECTOR.REMINDER_AFTER_EXPIRY_DAYS = 5
 
     def setUp(self):
+        super(BaseTriggerTestCase, self).setUp()
         self.create_policy()
-
-    def tearDown(self):
-        if self.history_policy:
-            self.history_policy.delete()
-
-        if self.renewed_policy:
-            InsureePolicy.objects.get(policy=self.renewed_policy).delete()
-            self.renewed_policy.delete()
-
-        InsureePolicy.objects.get(policy=self.policy).delete()
-
-        self.test_insuree.family = None
-        self.test_insuree.save()
-
-        self.policy.delete()
-        self.test_family.delete()
-        self.test_insuree.delete()
-        self.test_product.delete()
 
     def create_policy(self):
         self.test_insuree = create_test_insuree(with_family=True)
@@ -54,9 +36,9 @@ class BaseTriggerTestCase(TestCase):
             product=self.test_product,
             insuree=self.test_insuree,
             custom_props={
-             "status": 2,
-             "validity_from": datetime(2021, 6, 1, 10)
-        })
+                "status": 2,
+                "validity_from": datetime(2021, 6, 1, 10)
+            })
         self.history_policy = None
         self.renewed_policy = None
 
@@ -79,8 +61,8 @@ class BaseTriggerTestCase(TestCase):
             insuree=self.test_insuree,
             custom_props={
                 "status": 2,
-                "start_date": expiry_date+timedelta(days=1),
-                "expiry_date": expiry_date+timedelta(days=365)
-        })
+                "start_date": expiry_date + timedelta(days=1),
+                "expiry_date": expiry_date + timedelta(days=365)
+            })
 
         self.renewed_policy.save()

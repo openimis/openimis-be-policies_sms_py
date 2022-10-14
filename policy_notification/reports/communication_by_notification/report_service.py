@@ -1,17 +1,6 @@
-import re
-
-import json
-from collections import Set
-from collections import namedtuple, defaultdict
-from datetime import datetime
-from functools import lru_cache
-from graphql import ResolveInfo
-from graphene import Context, Schema
-from itertools import chain
-from django.conf import settings
-import django_mysql.models.query
-from core.models import InteractiveUser, Officer
-from django.db.models import Q, QuerySet, When, F, Case
+from graphene import Context
+from core.models import Officer
+from django.db.models import Q, QuerySet
 from insuree.models import Family
 from location.models import Location
 from location.apps import LocationConfig
