@@ -70,7 +70,8 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
         active_and_alternated = NotificationTriggerEventDetectors\
             .__get_all_policies_after(from_time)\
             .filter(status=Policy.STATUS_ACTIVE)\
-            .filter(~Q(stage=Policy.STAGE_RENEWED))
+            .filter(~Q(stage=Policy.STAGE_RENEWED))\
+            .all()
 
         # Id of last policy before time period
         return NotificationTriggerEventDetectors.__filter_activated_after_time(active_and_alternated, from_time)
@@ -219,13 +220,17 @@ class NotificationTriggerEventDetectors(NotificationTriggerAbs):
     @staticmethod
     def __filter_activated_after_time(active_and_alternated, from_time):
         historic_policies_data = NotificationTriggerEventDetectors \
-            .__get_latest_historical_policies_before(from_time, active_and_alternated) \
-            .values('altered_column', 'status') \
-            .annotate(legacy_value=F('status'))
+            .__get_latest_historical_policies_before(from_time, active_and_alternated)\
+            .only('altered_column', 'status')\
+            .values('altered_column', 'status')\
+            .annotate(legacy_value=F('status'))\
+            .all()
 
-        latest = active_and_alternated \
+        latest = active_and_alternated\
+            .only('altered_column', 'status')\
             .values('altered_column', 'status') \
-            .annotate(current_value=F('status'))
+            .annotate(current_value=F('status'))\
+            .all()
 
         result_list = chain(latest, historic_policies_data)
         unique_results = groupby(result_list, key=lambda obj: obj['altered_column'])

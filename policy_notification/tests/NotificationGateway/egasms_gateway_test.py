@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from unittest.mock import patch, PropertyMock
-from unittest import TestCase
+from django.test import TestCase
 
 import requests
 
@@ -23,7 +23,7 @@ class TestEGASMSGateway(TestCase):
         }, separators=(',', ':')),
         'datetime': "2021-07-13 11:16:34"
     }, separators=(',', ':'))
-    
+
     TEST_PROVIDER_CONFIG = {
         "GateUrl": "http://127.0.0.1:8000",
         "SmsResource": "/api/gateway_endpoint/",
@@ -55,6 +55,7 @@ class TestEGASMSGateway(TestCase):
     }
 
     def setUp(self):
+        super(TestEGASMSGateway, self).setUp()
         self.maxDiff = None
         self.request_called = None
 
