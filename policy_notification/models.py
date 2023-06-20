@@ -22,7 +22,7 @@ class FamilyNotification(core_models.BaseVersionedModel):
                                                 default=get_first_or_default_language().code, null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'tblFamilySMS'
 
 

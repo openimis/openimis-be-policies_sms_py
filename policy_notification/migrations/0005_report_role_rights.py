@@ -46,7 +46,7 @@ def add_report_role_rights(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('policy_notification', '0004_add_default_notification_approval')
+        ('policy_notification', '0003_auto_20210620_1931')
     ]
 
     operations = [

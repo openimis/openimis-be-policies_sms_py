@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'tblFamilySMS',
-                'managed': False,
+                'managed': True,
             },
         ),
     ]

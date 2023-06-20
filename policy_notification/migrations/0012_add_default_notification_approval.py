@@ -3,6 +3,7 @@ import logging
 
 from django.db import migrations
 from insuree.models import Family
+from django.conf import settings
 
 from policy_notification.models import FamilyNotification
 from policy_notification.utils import get_default_notification_data
@@ -14,21 +15,27 @@ defaults = get_default_notification_data()
 default_approval = defaults['approvalOfNotification']
 default_language = defaults['languageOfNotification']
 
-MIGRATION_SQL = f"""
+mssql_code = f"""
 insert into 
 tblFamilySMS(FamilyID, ValidityFrom, ApprovalOfSMS, LanguageOfSMS)    
 select FamilyId, GETDATE(), 0, '{default_language}' from tblFamilies 
 where ValidityTo is null and FamilyID not in (select FamilyID from tblFamilySMS)
 """
 
+psql_code = f"""
+insert into 
+"tblFamilySMS"("FamilyID", "ValidityFrom", "ApprovalOfSMS", "LanguageOfSMS")    
+select "FamilyID", CURRENT_TIMESTAMP, False, '{default_language}' from "tblFamilies" 
+where "ValidityTo" is null and "FamilyID" not in (select "FamilyID" from "tblFamilySMS")
+"""
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('policy_notification', '0003_auto_20210620_1931')
+        ('policy_notification', '0011_alter_familynotification_options')
     ]
 
     operations = [
-        migrations.RunSQL(MIGRATION_SQL)
+        migrations.RunSQL(mssql_code if settings.MSSQL else psql_code)
     ]
 
