@@ -15,27 +15,21 @@ defaults = get_default_notification_data()
 default_approval = defaults['approvalOfNotification']
 default_language = defaults['languageOfNotification']
 
-mssql_code = f"""
+MIGRATION_SQL = f"""
 insert into 
 tblFamilySMS(FamilyID, ValidityFrom, ApprovalOfSMS, LanguageOfSMS)    
 select FamilyId, GETDATE(), 0, '{default_language}' from tblFamilies 
 where ValidityTo is null and FamilyID not in (select FamilyID from tblFamilySMS)
 """
 
-psql_code = f"""
-insert into 
-"tblFamilySMS"("FamilyID", "ValidityFrom", "ApprovalOfSMS", "LanguageOfSMS")    
-select "FamilyID", CURRENT_TIMESTAMP, False, '{default_language}' from "tblFamilies" 
-where "ValidityTo" is null and "FamilyID" not in (select "FamilyID" from "tblFamilySMS")
-"""
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('policy_notification', '0011_alter_familynotification_options')
+        ('policy_notification', '0003_auto_20210620_1931')
     ]
 
     operations = [
-        migrations.RunSQL(mssql_code if settings.MSSQL else psql_code)
+        migrations.RunSQL(MIGRATION_SQL if settings.MSSQL else "select 1")
     ]
 
