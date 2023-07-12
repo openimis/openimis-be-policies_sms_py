@@ -4,6 +4,7 @@ from datetime import date
 
 from django.db import migrations
 from policy.models import Policy
+from django.conf import settings
 
 from policy_notification.models import IndicationOfPolicyNotifications
 from policy_notification.utils import get_default_notification_data
@@ -12,11 +13,18 @@ logger = logging.getLogger(__name__)
 
 defaults = get_default_notification_data()
 
-MIGRATION_SQL = """
+mssql_code = """
 insert into 
 tblIndicationOfPolicyNotifications(PolicyId, ValidityFrom, NotificationOnActivationSent, NotificationOnRenewalSent)    
 select PolicyID, GETDATE(), '0001-01-01 00:00:00.000', '0001-01-01 00:00:00.000'  from tblPolicy 
 where ValidityTo is null and PolicyID not in (select PolicyID from tblIndicationOfPolicyNotifications)
+"""
+
+psql_code = """
+insert into 
+"tblIndicationOfPolicyNotifications"("PolicyID", "ValidityFrom", "NotificationOnActivationSent", "NotificationOnRenewalSent")    
+select "PolicyID", CURRENT_TIMESTAMP, '0001-01-01 00:00:00.000', '0001-01-01 00:00:00.000'  from "tblPolicy" 
+where "ValidityTo" is null and "PolicyID" not in (select "PolicyID" from "tblIndicationOfPolicyNotifications")
 """
 
 
@@ -27,6 +35,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(MIGRATION_SQL)
+        migrations.RunSQL(mssql_code if settings.MSSQL else psql_code)
     ]
 
