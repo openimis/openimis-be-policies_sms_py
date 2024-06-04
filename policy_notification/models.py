@@ -15,8 +15,8 @@ class FamilyNotification(core_models.BaseVersionedModel):
         NO_APPROVAL_NO_PHONE_NUMBER_CODE = 4
 
     # id field is required by Django ORM, however not included in legacy version of model
-    family = models.OneToOneField(Family, models.CASCADE, db_column='FamilyID',
-                                  related_name="family_notification", primary_key=True)
+    family = models.ForeignKey(Family, on_delete=models.DO_NOTHING,
+                               related_name='family_notification', db_column='FamilyID', primary_key=True)
     approval_of_notification = models.BooleanField(db_column='ApprovalOfSMS', default=False, null=False)
     language_of_notification = models.CharField(db_column='LanguageOfSMS', max_length=5,
                                                 default=get_first_or_default_language().code, null=False)
@@ -62,4 +62,3 @@ class IndicationOfPolicyNotificationsDetails(core_models.BaseVersionedModel):
 
     class Meta:
         db_table = 'tblIndicationOfPolicyNotificationsDetails'
-
