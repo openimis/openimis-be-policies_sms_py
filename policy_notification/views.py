@@ -1,7 +1,7 @@
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.csrf import csrf_exempt
 from report.services import ReportService
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from policy_notification.apps import PolicyNotificationConfig
 from policy_notification.reports import COMMUNICATION_BY_NOTIFICATION_REPORT_TEMPLATE, \
     FamilyNotificationReportServiceGQL

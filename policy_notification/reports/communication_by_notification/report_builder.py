@@ -1,13 +1,13 @@
 from location.models import Location
 from policy_notification.models import FamilyNotification
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 REPORT_MODE_STRING_REPRESENTATION = {
-        FamilyNotification.FamilyComunicationModes.ALL: _('policy_notification.Mode.0'),
-        FamilyNotification.FamilyComunicationModes.FULL_COMMUNICATION_ENABLED_CODE: _('policy_notification.Mode.1'),
-        FamilyNotification.FamilyComunicationModes.APPROVAL_NO_PHONE_NUMBER_CODE: _('policy_notification.Mode.2'),
-        FamilyNotification.FamilyComunicationModes.NO_APPROVAL_PHONE_NUMBER_CODE: _('policy_notification.Mode.3'),
-        FamilyNotification.FamilyComunicationModes.NO_APPROVAL_NO_PHONE_NUMBER_CODE: _('policy_notification.Mode.4')
+    FamilyNotification.FamilyComunicationModes.ALL: _('policy_notification.Mode.0'),
+    FamilyNotification.FamilyComunicationModes.FULL_COMMUNICATION_ENABLED_CODE: _('policy_notification.Mode.1'),
+    FamilyNotification.FamilyComunicationModes.APPROVAL_NO_PHONE_NUMBER_CODE: _('policy_notification.Mode.2'),
+    FamilyNotification.FamilyComunicationModes.NO_APPROVAL_PHONE_NUMBER_CODE: _('policy_notification.Mode.3'),
+    FamilyNotification.FamilyComunicationModes.NO_APPROVAL_NO_PHONE_NUMBER_CODE: _('policy_notification.Mode.4')
 }
 
 
